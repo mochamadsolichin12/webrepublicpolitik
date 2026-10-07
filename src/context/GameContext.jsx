@@ -50,7 +50,7 @@ export function GameProvider({ children, defaultTab }) {
     } catch {
       // fallback
     }
-    return DEMO_ACCOUNTS.superadmin;
+    return null; // Wajib login terlebih dahulu
   });
 
   const [isDbConnected, setIsDbConnected] = useState(false);
@@ -68,7 +68,7 @@ export function GameProvider({ children, defaultTab }) {
     return [DEMO_ACCOUNTS.superadmin];
   });
 
-  // Load saved player state or fallback
+  // Load saved player state or fallback (null jika belum login)
   const [player, setPlayer] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY + '_player');
@@ -78,7 +78,7 @@ export function GameProvider({ children, defaultTab }) {
     } catch {
       // fallback
     }
-    return DEMO_ACCOUNTS.superadmin;
+    return null; // Wajib login terlebih dahulu
   });
 
   // Sync role and users dynamically from Supabase (or fallback SQLite localhost)

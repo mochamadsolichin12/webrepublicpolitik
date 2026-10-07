@@ -60,9 +60,10 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-function PageShell({ children }) {
-  const { notification, currentUser } = useGame();
+function PageShell({ children, defaultTab }) {
+  const { notification, currentUser, isSuperAdmin, isModerator } = useGame();
 
+  // 1. Guard Wajib Login: Jika belum login, tampilkan portal login modal penuh
   if (!currentUser) {
     return (
       <div className="game-root-container">
@@ -77,6 +78,54 @@ function PageShell({ children }) {
           </div>
         )}
         <AuthModal />
+      </div>
+    );
+  }
+
+  // 2. Guard Akses Otoritas Khusus (Halaman Super Admin & Moderator)
+  // Jika pengguna biasa melompat ke /admin atau /moderator, lempar kembali ke Beranda atau tampilkan pesan terlarang
+  if (defaultTab === 'admin' && !isSuperAdmin) {
+    return (
+      <div className="game-root-container">
+        <div className="auth-portal-overlay">
+          <div className="auth-portal-card glass-panel-gold" style={{ textAlign: 'center', maxWidth: '440px' }}>
+            <AlertCircle size={48} color="#ef4444" style={{ margin: '0 auto 12px auto' }} />
+            <h2 style={{ color: '#f8fafc', marginBottom: '8px' }}>Akses Terbatas: Khusus Super Admin</h2>
+            <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '18px' }}>
+              Akun Anda ({currentUser.fullName || currentUser.username}) memiliki role <strong>{currentUser.role?.toUpperCase()}</strong> dan tidak diizinkan mengakses panel ini.
+            </p>
+            <button 
+              className="btn-gold" 
+              style={{ width: '100%', justifyContent: 'center' }}
+              onClick={() => { window.location.href = '/'; }}
+            >
+              Kembali ke Beranda
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (defaultTab === 'moderator' && !isModerator) {
+    return (
+      <div className="game-root-container">
+        <div className="auth-portal-overlay">
+          <div className="auth-portal-card glass-panel-gold" style={{ textAlign: 'center', maxWidth: '440px' }}>
+            <AlertCircle size={48} color="#a855f7" style={{ margin: '0 auto 12px auto' }} />
+            <h2 style={{ color: '#f8fafc', marginBottom: '8px' }}>Akses Terbatas: Khusus Moderator</h2>
+            <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '18px' }}>
+              Halaman ini diperuntukkan bagi Dewan Kehormatan dan Moderator Negara.
+            </p>
+            <button 
+              className="btn-gold" 
+              style={{ width: '100%', justifyContent: 'center' }}
+              onClick={() => { window.location.href = '/'; }}
+            >
+              Kembali ke Beranda
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -127,7 +176,7 @@ export default function PageLayout({ children, defaultTab }) {
   return (
     <ErrorBoundary>
       <GameProvider defaultTab={defaultTab}>
-        <PageShell>
+        <PageShell defaultTab={defaultTab}>
           {children}
         </PageShell>
       </GameProvider>
