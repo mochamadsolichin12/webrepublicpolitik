@@ -25,7 +25,7 @@ const LegislationView = lazy(() => import('./components/LegislationView'));
 const RealisticEconomyView = lazy(() => import('./components/RealisticEconomyView'));
 const JobsWorkView = lazy(() => import('./components/JobsWorkView'));
 const SettingsView = lazy(() => import('./components/SettingsView'));
-const AuthModal = lazy(() => import('./components/AuthModal'));
+import AuthModal from './components/AuthModal';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -100,9 +100,7 @@ function MainApp() {
             <span className="toast-text">{notification.message}</span>
           </div>
         )}
-        <Suspense fallback={<ViewLoader tab="auth" />}>
-          <AuthModal />
-        </Suspense>
+        <AuthModal />
       </div>
     );
   }
