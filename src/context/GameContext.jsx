@@ -405,7 +405,7 @@ export function GameProvider({ children, defaultTab }) {
     } catch {
       // fallback
     }
-    return INITIAL_ACTIVE_WARS;
+    return []; // Awal kosong - murni dideklarasikan oleh player
   });
 
   const [warHistory, setWarHistory] = useState(() => {

@@ -193,6 +193,23 @@ export default function MilitaryWarsView() {
       </div>
 
       {/* TAB 1: FRONT PERTEMPURAN AKTIF */}
+      {warSubTab === 'active' && activeWars.length === 0 && (
+        <div className="wars-empty-state glass-panel-gold" style={{ textAlign: 'center', padding: '50px 20px', borderRadius: '14px', margin: '20px 0' }}>
+          <Shield size={64} color="#10b981" style={{ margin: '0 auto 16px auto', opacity: 0.8 }} />
+          <h3 style={{ fontSize: '1.4rem', color: '#f8fafc', marginBottom: '8px' }}>Nusantara Dalam Keadaan Damai</h3>
+          <p style={{ color: '#94a3b8', maxWidth: '520px', margin: '0 auto 24px auto', fontSize: '0.95rem', lineHeight: '1.6' }}>
+            Saat ini tidak ada konflik militer atau sengketa perbatasan. Seluruh wilayah Republik dalam status stabilitas kondusif. Perang hanya akan terjadi apabila dideklarasikan oleh pemain/fraksi.
+          </p>
+          <button 
+            className="btn-crimson" 
+            style={{ margin: '0 auto' }}
+            onClick={() => { sounds.playClick(); setIsDeclaringWar(true); }}
+          >
+            <Swords size={16} /> Buka Front Perang Baru
+          </button>
+        </div>
+      )}
+
       {warSubTab === 'active' && activeWar && (
         <div className="active-war-room-grid">
           {/* Sisi Kiri: Daftar Front Perang Aktif */}
