@@ -1,0 +1,9 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/((?!assets|api|favicon.ico|emblem.jpg|indonesia-coastline.geojson|world-countries.geojson|.*\\..*).*)",
+      "destination": "/$1.html"
+    }
+  ]
+}
