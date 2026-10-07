@@ -2221,9 +2221,14 @@ export function GameProvider({ children, defaultTab }) {
     sounds.playClick();
     setCurrentUser(null);
     setPlayer(null);
-    localStorage.removeItem(STORAGE_KEY + '_current_user');
-    localStorage.removeItem(STORAGE_KEY + '_player');
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {}
     showToast('Anda telah keluar dari sesi kewarganegaraan.', 'info');
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 200);
   };
 
   const loginAsRole = async (roleKey) => {
