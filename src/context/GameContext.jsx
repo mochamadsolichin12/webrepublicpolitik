@@ -12,7 +12,7 @@ import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
 
 const GameContext = createContext();
 
-const STORAGE_KEY = 'republic_politic_save_v3_parties';
+const STORAGE_KEY = 'republic_politic_save_v4_auth';
 
 export const DEMO_ACCOUNTS = {
   superadmin: {
