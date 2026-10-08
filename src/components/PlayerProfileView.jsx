@@ -212,29 +212,6 @@ export default function PlayerProfileView() {
               <Edit3 size={15} />
               <span>{isEditing ? 'Batal' : 'Ubah'}</span>
             </button>
-            <div className="quick-role-toggle-box">
-              <span className="qrt-label">Beralih Peran:</span>
-              <div className="qrt-buttons">
-                <button 
-                  className={`qrt-btn ${userRole === 'superadmin' ? 'active-super' : ''}`}
-                  onClick={() => switchActiveRole('superadmin')}
-                >
-                  Super Admin
-                </button>
-                <button 
-                  className={`qrt-btn ${userRole === 'moderator' ? 'active-mod' : ''}`}
-                  onClick={() => switchActiveRole('moderator')}
-                >
-                  Moderator
-                </button>
-                <button 
-                  className={`qrt-btn ${userRole === 'player' ? 'active-player' : ''}`}
-                  onClick={() => switchActiveRole('player')}
-                >
-                  Player
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 

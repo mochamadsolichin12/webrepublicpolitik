@@ -51,18 +51,9 @@ export default function ModeratorPanel() {
         <Scale size={56} className="text-purple animate-pulse" />
         <h2 className="restricted-title">Akses Khusus Dewan Kehormatan & Moderator</h2>
         <p className="restricted-desc">
-          Panel ini diperuntukkan bagi <strong>Moderator & Dewan Kehormatan Nasional</strong> untuk menegakkan konstitusi, etika pers, dan ketertiban sipil.
-          Role Anda saat ini: <span className="role-tag-curr">{userRole.toUpperCase()}</span>.
+          Panel ini hanya diperuntukkan bagi <strong>Moderator & Dewan Kehormatan Nasional</strong> untuk menegakkan konstitusi, etika pers, dan ketertiban sipil.
+          Role Akun Anda saat ini: <span className="role-tag-curr">{userRole.toUpperCase()}</span>.
         </p>
-        <div className="role-switch-hint">
-          <p>Ingin menguji fitur Moderator?</p>
-          <button 
-            className="btn-secondary" 
-            onClick={() => switchActiveRole('moderator')}
-          >
-            <ShieldCheck size={16} /> Beralih ke Peran Moderator
-          </button>
-        </div>
       </div>
     );
   }
@@ -82,31 +73,6 @@ export default function ModeratorPanel() {
           <p className="admin-subtitle">
             Pusat pengawasan kebebasan pers, penegakan konstitusi parlemen, dan disiplin warga negara berdaulat.
           </p>
-        </div>
-        <div className="admin-hero-right">
-          <div className="admin-role-switcher-box">
-            <span className="ars-label">Uji Role Cepat:</span>
-            <div className="ars-buttons">
-              <button 
-                className={`ars-btn ${userRole === 'superadmin' ? 'active-super' : ''}`}
-                onClick={() => switchActiveRole('superadmin')}
-              >
-                Super Admin
-              </button>
-              <button 
-                className={`ars-btn ${userRole === 'moderator' ? 'active-mod' : ''}`}
-                onClick={() => switchActiveRole('moderator')}
-              >
-                Moderator
-              </button>
-              <button 
-                className={`ars-btn ${userRole === 'player' ? 'active-player' : ''}`}
-                onClick={() => switchActiveRole('player')}
-              >
-                Player
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 
