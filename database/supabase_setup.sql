@@ -424,13 +424,8 @@ INSERT INTO regions (id, name, capital, island, population, budget, dominant_par
 
 INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('papua_pegunungan', 'Papua Pegunungan', 'Wamena', 'papua', 1430000, 17500000000, NULL, 71, 'Kopi Arabika Wamena & Hasil Bumi Lembah Baliem', 10.0, 1, 60, -4.0984, 138.9439) ON CONFLICT (id) DO NOTHING;
 
--- 4. DATA RANCANGAN UNDANG-UNDANG DPR RI
+-- 4. DATA RANCANGAN UNDANG-UNDANG DPR RI (KOSONG - MURNI DIAJUKAN OLEH PEMAIN DI PARLEMEN)
 
-INSERT INTO bills (id, title, description, category, author_id, author_name, party_id, yes_votes, no_votes, status, impact_summary) VALUES ('bill-tax-reform', 'RUU Pajak Karbon & Insentif Hilirisasi Nikel', 'Mengenakan pajak karbon progresif pada pabrik smelter luar negeri dan memberikan insentif 20% bagi industri hilirisasi domestik di Morowali & Weda Bay.', 'Ekonomi & Tambang', 'usr-satria', '', NULL, 0, 0, 'voting', '') ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO bills (id, title, description, category, author_id, author_name, party_id, yes_votes, no_votes, status, impact_summary) VALUES ('bill-military-radar', 'RUU Peningkatan Anggaran Radar Pertahanan ZEE Natuna & Papua', 'Mengalokasikan tambahan 15% dari APBN untuk pemasangan sistem radar pertahanan maritim generasi ke-5 serta pangkalan kapal selam di Natuna dan Sorong.', 'Pertahanan & Kedaulatan', 'usr-satria', '', NULL, 0, 0, 'voting', '') ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO bills (id, title, description, category, author_id, author_name, party_id, yes_votes, no_votes, status, impact_summary) VALUES ('bill-subsidy-umkm', 'RUU Bantuan Tunai & Subsidi Pupuk Petani Desa', 'Menjamin ketersediaan pupuk bersubsidi 100% dan pinjaman lunak bunga 0% untuk 12 juta keluarga petani di Jawa, Sumatera, dan Nusa Tenggara.', 'Kesejahteraan Sosial', 'usr-satria', '', NULL, 0, 0, 'voting', '') ON CONFLICT (id) DO NOTHING;
 
 -- 5. DATA UNDANG-UNDANG NASIONAL YANG TELAH DISAHKAN
 

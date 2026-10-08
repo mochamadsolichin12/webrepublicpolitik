@@ -49,10 +49,11 @@ INSERT INTO regions (id, name, capital, island, population, budget, dominant_par
 ` + INITIAL_REGIONS.map(r => `(${esc(r.id)}, ${esc(r.name)}, ${esc(r.capital)}, ${esc(r.island)}, ${r.population || 5000000}, ${r.budget || 20000000000}, ${esc(r.dominantPartyId || 'pdin')}, ${r.supportRate || 75}, ${esc(r.resource)}, 10.0, 1, 60, ${r.lat}, ${r.lng})`).join(',\n') + `
 ON DUPLICATE KEY UPDATE name=VALUES(name);
 
--- 4. DATA RANCANGAN UNDANG-UNDANG DPR RI
-INSERT INTO bills (id, title, description, category, author_id, author_name, party_id, yes_votes, no_votes, status, impact_summary) VALUES
+-- 4. DATA RANCANGAN UNDANG-UNDANG DPR RI (KOSONG - MURNI DIAJUKAN OLEH PEMAIN DI PARLEMEN)
+` + (INITIAL_BILLS.length > 0 ? `INSERT INTO bills (id, title, description, category, author_id, author_name, party_id, yes_votes, no_votes, status, impact_summary) VALUES
 ` + INITIAL_BILLS.map(b => `(${esc(b.id)}, ${esc(b.title)}, ${esc(b.description || '')}, ${esc(b.category)}, 'usr-satria', ${esc(b.author || 'Komisi DPR RI')}, 'pdin', ${b.yesVotes || 0}, ${b.noVotes || 0}, ${esc(b.status || 'voting')}, ${esc(b.impactText || '')})`).join(',\n') + `
-ON DUPLICATE KEY UPDATE title=VALUES(title);
+ON DUPLICATE KEY UPDATE title=VALUES(title);` : `-- Belum ada RUU diajukan`) + `
+
 
 -- 5. DATA UNDANG-UNDANG NASIONAL YANG TELAH DISAHKAN
 INSERT INTO passed_laws (id, title, category, description, national_effects) VALUES

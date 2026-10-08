@@ -274,12 +274,8 @@ INSERT INTO regions (id, name, capital, island, population, budget, dominant_par
 ('papua_pegunungan', 'Papua Pegunungan', 'Wamena', 'papua', 5000000, 20000000000, 'pdin', 75, 'Kopi Arabika Wamena & Hasil Bumi Lembah Baliem', 10.0, 1, 60, -4.0984, 138.9439)
 ON DUPLICATE KEY UPDATE name=VALUES(name);
 
--- 4. DATA RANCANGAN UNDANG-UNDANG DPR RI
-INSERT INTO bills (id, title, description, category, author_id, author_name, party_id, yes_votes, no_votes, status, impact_summary) VALUES
-('bill-tax-reform', 'RUU Pajak Karbon & Insentif Hilirisasi Nikel', 'Mengenakan pajak karbon progresif pada pabrik smelter luar negeri dan memberikan insentif 20% bagi industri hilirisasi domestik di Morowali & Weda Bay.', 'Ekonomi & Tambang', 'usr-satria', 'Komisi DPR RI', 'pdin', 0, 0, 'voting', '+$RP 25T Kas Negara/thn, -2% Beban Polusi Daerah, +5% Dukungan Pengusaha, -3% Kepuasan Buruh Tambang'),
-('bill-military-radar', 'RUU Peningkatan Anggaran Radar Pertahanan ZEE Natuna & Papua', 'Mengalokasikan tambahan 15% dari APBN untuk pemasangan sistem radar pertahanan maritim generasi ke-5 serta pangkalan kapal selam di Natuna dan Sorong.', 'Pertahanan & Kedaulatan', 'usr-satria', 'Komisi DPR RI', 'pdin', 0, 0, 'voting', '+15 Militer Nasional, -$RP 18T Kas Negara, +8% Kedaulatan Perbatasan'),
-('bill-subsidy-umkm', 'RUU Bantuan Tunai & Subsidi Pupuk Petani Desa', 'Menjamin ketersediaan pupuk bersubsidi 100% dan pinjaman lunak bunga 0% untuk 12 juta keluarga petani di Jawa, Sumatera, dan Nusa Tenggara.', 'Kesejahteraan Sosial', 'usr-satria', 'Komisi DPR RI', 'pdin', 0, 0, 'voting', '+12% Kepuasan Rakyat Pedesaan, -$RP 14T Kas Negara, +6% Stabilitas Nasional')
-ON DUPLICATE KEY UPDATE title=VALUES(title);
+-- 4. DATA RANCANGAN UNDANG-UNDANG DPR RI (KOSONG - MURNI DIAJUKAN OLEH PEMAIN DI PARLEMEN)
+
 
 -- 5. DATA UNDANG-UNDANG NASIONAL YANG TELAH DISAHKAN
 INSERT INTO passed_laws (id, title, category, description, national_effects) VALUES

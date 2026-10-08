@@ -764,6 +764,15 @@ export function GameProvider({ children, defaultTab }) {
           return { ...bill, timeRemainingSeconds: nextTime };
         });
 
+        // Update bill status and persist to Supabase
+        if (isSupabaseConfigured && supabase) {
+          updated.forEach((b) => {
+            if (b.status !== 'voting') {
+              supabase.from('bills').update({ status: b.status }).eq('id', b.id).then(() => {});
+            }
+          });
+        }
+
         // If any bill just passed, move to passed laws and trigger effect
         const newlyPassed = updated.filter(
           (b) => b.status === 'passed' && !passedLaws.some((l) => l.id === b.id)
@@ -772,18 +781,33 @@ export function GameProvider({ children, defaultTab }) {
         if (newlyPassed.length > 0) {
           sounds.playGavel();
           newlyPassed.forEach((b) => {
-            setPassedLaws((laws) => [
-              {
-                id: b.id,
-                title: b.title.replace('RUU', 'UU'),
-                category: b.category,
-                passedYear: '2026',
-                sponsor: b.proposedBy,
-                summary: b.description,
-                activeBuff: b.impactText,
-              },
-              ...laws,
-            ]);
+            const lawTitle = b.title.replace('RUU', 'UU');
+            const lawItem = {
+              id: 'law-' + b.id.replace('bill-', ''),
+              title: lawTitle,
+              category: b.category,
+              passedYear: '2026',
+              sponsor: b.proposedBy,
+              summary: b.description,
+              activeBuff: b.impactText,
+            };
+
+            // Save to Supabase passed_laws table
+            if (isSupabaseConfigured && supabase) {
+              supabase.from('passed_laws').insert([{
+                id: lawItem.id,
+                bill_id: b.id,
+                title: lawItem.title,
+                category: lawItem.category,
+                description: lawItem.summary,
+                national_effects: b.nationalEffect || {},
+                passed_at: new Date().toISOString()
+              }]).then(({ error }) => {
+                if (error) console.error('Supabase passed_laws insert error:', error.message);
+              });
+            }
+
+            setPassedLaws((laws) => [lawItem, ...laws]);
 
             setNationalState((curr) => ({
               ...curr,
@@ -1225,6 +1249,17 @@ export function GameProvider({ children, defaultTab }) {
           ...bill.votes,
           [voteChoice]: (bill.votes[voteChoice] || 0) + 1,
         };
+
+        // Persist vote to Supabase if configured
+        if (isSupabaseConfigured && supabase) {
+          supabase.from('bills').update({
+            yes_votes: updatedVotes.agree || 0,
+            no_votes: updatedVotes.reject || 0,
+          }).eq('id', billId).then(({ error }) => {
+            if (error) console.error('Supabase vote update error:', error.message);
+          });
+        }
+
         return { ...bill, votes: updatedVotes };
       })
     );
@@ -1290,6 +1325,26 @@ export function GameProvider({ children, defaultTab }) {
       money: (prev.money || 0) - draftingCost,
       exp: (prev.exp || 0) + 200,
     } : prev));
+
+    // Simpan RUU ke Supabase jika terkonfigurasi
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('bills').insert([{
+        id: createdBill.id,
+        title: createdBill.title,
+        description: createdBill.description,
+        category: createdBill.category,
+        author_id: player.id || 'usr-player',
+        author_name: player.fullName || player.username || 'Kader Parlemen',
+        party_id: player.partyId || null,
+        yes_votes: createdBill.votes.agree,
+        no_votes: createdBill.votes.reject,
+        status: 'voting',
+        impact_summary: createdBill.impactText,
+        created_at: new Date().toISOString()
+      }]).then(({ error }) => {
+        if (error) console.error('Supabase propose bill error:', error.message);
+      });
+    }
 
     setBills((prev) => [createdBill, ...prev]);
 
