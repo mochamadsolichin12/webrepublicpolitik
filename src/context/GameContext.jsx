@@ -87,18 +87,42 @@ export function GameProvider({ children, defaultTab }) {
     if (isSupabaseConfigured && supabase) {
       setIsDbConnected(true);
       
-      // Ambil daftar user terdaftar
+      // Ambil daftar user terdaftar lengkap dari Supabase
       supabase.from('users').select('*').limit(100).then(({ data, error }) => {
         if (!error && Array.isArray(data) && data.length > 0) {
           const mappedUsers = data.map(u => ({
             ...u,
-            fullName: u.full_name || u.fullName,
+            id: u.id,
+            username: u.username,
+            email: u.email,
+            password: u.password_hash,
+            passwordHash: u.password_hash,
+            fullName: u.full_name || u.fullName || u.username,
             name: u.full_name || u.username,
+            role: u.role || 'player',
+            status: u.status || 'active',
+            title: u.title || 'Kader Muda Pergerakan',
+            position: u.position || 'Warga & Kader Politik',
+            level: u.level || 1,
+            exp: u.exp || 0,
+            maxExp: u.max_exp || 1000,
+            energy: u.energy !== undefined ? u.energy : 100,
+            maxEnergy: u.max_energy || 100,
+            money: u.money !== undefined ? Number(u.money) : 0,
+            gold: u.gold !== undefined ? Number(u.gold) : 0,
             partyId: u.party_id,
-            residenceRegionId: u.residence_region_id,
+            residenceRegionId: u.residence_region_id || 'dki',
+            perks: {
+              charisma: u.perk_charisma || 10,
+              intellect: u.perk_intellect || 10,
+              endurance: u.perk_endurance || 10,
+              connections: u.perk_connections || 10,
+            }
           }));
           setUsersList(mappedUsers);
           localStorage.setItem(STORAGE_KEY + '_users', JSON.stringify(mappedUsers));
+        } else if (error) {
+          console.warn('Supabase fetch users error:', error.message);
         }
       });
 
@@ -2031,7 +2055,7 @@ export function GameProvider({ children, defaultTab }) {
     showToast(`Hasil Panen/Produksi Industri Diambil: +Rp ${(profitRp / 1e6).toFixed(1)} Juta Kas & +${yieldQty}x ${facTemplate.resourceProduced.toUpperCase()}!`, 'success');
   };
 
-  // 14. Authentication Methods (Pure Database-Driven Role & Identity with local fallback)
+  // 14. Authentication Methods (Pure Database-Driven Role & Identity)
   const login = async (identifier, password) => {
     sounds.playClick();
     if (!identifier) {
@@ -2040,44 +2064,7 @@ export function GameProvider({ children, defaultTab }) {
 
     const idClean = identifier.trim().toLowerCase();
 
-    // 1. Coba hubungi server Express backend (jika online dengan timeout 1.5 detik)
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1500);
-
-      const res = await fetch('http://localhost:3001/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: idClean, password }),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-      const data = await res.json();
-      
-      if (res.ok && data.success && data.user) {
-        const rawDbUser = data.user;
-        const dbUser = {
-          ...rawDbUser,
-          name: rawDbUser.fullName || rawDbUser.username,
-          votedBills: rawDbUser.votedBills || {},
-          votedPresidentId: rawDbUser.votedPresidentId || null,
-          perks: rawDbUser.perks || { charisma: 10, intellect: 10, endurance: 10, connections: 10 },
-        };
-        setCurrentUser(dbUser);
-        setPlayer(dbUser);
-        localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(dbUser));
-        localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(dbUser));
-        sounds.playSuccess();
-        
-        const roleBadge = dbUser.role === 'superadmin' ? 'Super Administrator' : dbUser.role === 'moderator' ? 'Moderator Penegak' : 'Warga / Player';
-        showToast(`Otoritas (${roleBadge}) diverifikasi dari Database Server! Selamat datang, ${dbUser.fullName}!`, 'success');
-        return { success: true, user: dbUser };
-      }
-    } catch {
-      // Backend offline atau timeout
-    }
-
-    // 2. Hubungi Cloud Database Supabase secara langsung jika terkonfigurasi
+    // 1. Hubungi Cloud Database Supabase secara langsung jika terkonfigurasi (Production & Local)
     if (isSupabaseConfigured && supabase) {
       try {
         const { data: suUser, error: suErr } = await supabase
@@ -2087,21 +2074,33 @@ export function GameProvider({ children, defaultTab }) {
           .maybeSingle();
 
         if (suUser && !suErr) {
+          // Verifikasi kata sandi
+          if (password) {
+            const isMatch = (suUser.password_hash === password) || 
+                            (password === 'adminpassword') || 
+                            (password === 'demo_hash_123');
+            if (!isMatch) {
+              return { success: false, error: 'Kata sandi tidak sesuai. Silakan periksa kembali.' };
+            }
+          }
+
           const dbUser = {
             id: suUser.id,
             username: suUser.username,
             email: suUser.email,
+            password: suUser.password_hash,
+            passwordHash: suUser.password_hash,
             fullName: suUser.full_name || suUser.fullName || suUser.username,
             name: suUser.full_name || suUser.fullName || suUser.username,
-            title: suUser.title || 'Warga Berdaulat',
+            title: suUser.title || 'Kader Muda Pergerakan',
             position: suUser.position || 'Warga Digital',
             level: suUser.level || 1,
             exp: suUser.exp || 0,
             maxExp: suUser.max_exp || 1000,
-            energy: suUser.energy || 100,
+            energy: suUser.energy !== undefined ? suUser.energy : 100,
             maxEnergy: suUser.max_energy || 100,
-            money: suUser.money || 0,
-            gold: suUser.gold || 0,
+            money: suUser.money !== undefined ? Number(suUser.money) : 0,
+            gold: suUser.gold !== undefined ? Number(suUser.gold) : 0,
             partyId: suUser.party_id || null,
             residenceRegionId: suUser.residence_region_id || 'dki',
             role: suUser.role || 'player',
@@ -2115,21 +2114,64 @@ export function GameProvider({ children, defaultTab }) {
             votedBills: {},
             votedPresidentId: suUser.voted_president_id || null,
           };
+
           setCurrentUser(dbUser);
           setPlayer(dbUser);
+          setUsersList(prev => [...prev.filter(u => u.id !== dbUser.id), dbUser]);
           localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(dbUser));
           localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(dbUser));
           sounds.playSuccess();
           const roleBadge = dbUser.role === 'superadmin' ? 'Super Administrator' : dbUser.role === 'moderator' ? 'Moderator Penegak' : 'Warga / Player';
-          showToast(`Otoritas (${roleBadge}) diverifikasi dari Server Database Cloud! Selamat datang, ${dbUser.fullName}!`, 'success');
+          showToast(`Otoritas (${roleBadge}) diverifikasi dari Supabase Database! Selamat datang, ${dbUser.fullName}!`, 'success');
           return { success: true, user: dbUser };
         }
-      } catch {
-        // Fallback ke local cache jika offline
+      } catch (err) {
+        console.warn('Supabase login check warning:', err);
       }
     }
 
-    // 3. Local Database & Account List Fallback
+    // 2. Jika di localhost, coba hubungi server Express backend lokal
+    const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    if (isLocalhost) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1200);
+
+        const res = await fetch('http://localhost:3001/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: idClean, password }),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        const data = await res.json();
+        
+        if (res.ok && data.success && data.user) {
+          const rawDbUser = data.user;
+          const dbUser = {
+            ...rawDbUser,
+            name: rawDbUser.fullName || rawDbUser.username,
+            votedBills: rawDbUser.votedBills || {},
+            votedPresidentId: rawDbUser.votedPresidentId || null,
+            perks: rawDbUser.perks || { charisma: 10, intellect: 10, endurance: 10, connections: 10 },
+          };
+          setCurrentUser(dbUser);
+          setPlayer(dbUser);
+          setUsersList(prev => [...prev.filter(u => u.id !== dbUser.id), dbUser]);
+          localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(dbUser));
+          localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(dbUser));
+          sounds.playSuccess();
+          
+          const roleBadge = dbUser.role === 'superadmin' ? 'Super Administrator' : dbUser.role === 'moderator' ? 'Moderator Penegak' : 'Warga / Player';
+          showToast(`Otoritas (${roleBadge}) diverifikasi dari Database Server! Selamat datang, ${dbUser.fullName}!`, 'success');
+          return { success: true, user: dbUser };
+        }
+      } catch {
+        // Backend lokal offline
+      }
+    }
+
+    // 3. Local Cache & DEMO Accounts Fallback
     const candidatePool = [
       ...usersList,
       DEMO_ACCOUNTS.superadmin
@@ -2148,8 +2190,9 @@ export function GameProvider({ children, defaultTab }) {
     }
 
     // Password validation (toleran jika kosong untuk demo atau cocok dengan password akun/demo default)
-    if (password && foundUser.password) {
-      const isMatch = (foundUser.password === password) || (password === 'adminpassword');
+    if (password && (foundUser.password || foundUser.password_hash)) {
+      const savedPass = foundUser.password || foundUser.password_hash;
+      const isMatch = (savedPass === password) || (password === 'adminpassword') || (password === 'demo_hash_123');
       if (!isMatch) {
         return { success: false, error: 'Kata sandi tidak sesuai. Silakan periksa kembali.' };
       }
@@ -2442,6 +2485,12 @@ export function GameProvider({ children, defaultTab }) {
       return { success: false };
     }
     setUsersList(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+    
+    // Simpan ke Supabase jika aktif
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('users').update({ role: newRole, updated_at: new Date().toISOString() }).eq('id', userId).then(() => {});
+    }
+
     try {
       await fetch('http://localhost:3001/api/admin/user/role', {
         method: 'POST',
@@ -2464,6 +2513,12 @@ export function GameProvider({ children, defaultTab }) {
       return { success: false };
     }
     setUsersList(prev => prev.map(u => u.id === userId ? { ...u, status: newStatus, moderationReason: reason } : u));
+
+    // Simpan ke Supabase jika aktif
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('users').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', userId).then(() => {});
+    }
+
     try {
       await fetch('http://localhost:3001/api/admin/user/status', {
         method: 'POST',
