@@ -475,6 +475,44 @@ app.get('/api/auth/registered-users', async (req, res) => {
   }
 });
 
+// Sync Real-Time Player State (Money, Gold, Exp, Level, Energy, Perks) into MySQL Database
+app.post('/api/player/sync', async (req, res) => {
+  const { id, money, gold, level, exp, maxExp, energy, maxEnergy, perks, partyId, residenceRegionId } = req.body;
+  if (!id) {
+    return res.status(400).json({ error: 'User ID wajib disertakan untuk sinkronisasi' });
+  }
+
+  try {
+    const updates = [];
+    const params = [];
+
+    if (money !== undefined) { updates.push('money = ?'); params.push(Number(money)); }
+    if (gold !== undefined) { updates.push('gold = ?'); params.push(Number(gold)); }
+    if (level !== undefined) { updates.push('level = ?'); params.push(Number(level)); }
+    if (exp !== undefined) { updates.push('exp = ?'); params.push(Number(exp)); }
+    if (maxExp !== undefined) { updates.push('max_exp = ?'); params.push(Number(maxExp)); }
+    if (energy !== undefined) { updates.push('energy = ?'); params.push(Number(energy)); }
+    if (maxEnergy !== undefined) { updates.push('max_energy = ?'); params.push(Number(maxEnergy)); }
+    if (partyId !== undefined) { updates.push('party_id = ?'); params.push(partyId); }
+    if (residenceRegionId !== undefined) { updates.push('residence_region_id = ?'); params.push(residenceRegionId); }
+    if (perks) {
+      if (perks.charisma !== undefined) { updates.push('perk_charisma = ?'); params.push(Number(perks.charisma)); }
+      if (perks.intellect !== undefined) { updates.push('perk_intellect = ?'); params.push(Number(perks.intellect)); }
+      if (perks.endurance !== undefined) { updates.push('perk_endurance = ?'); params.push(Number(perks.endurance)); }
+      if (perks.connections !== undefined) { updates.push('perk_connections = ?'); params.push(Number(perks.connections)); }
+    }
+
+    if (updates.length > 0) {
+      params.push(id);
+      await execute(`UPDATE users SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, params);
+    }
+
+    res.json({ success: true, message: 'Data progres player berhasil disimpan ke database MySQL' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ==================== ROLE-BASED ADMIN & MODERATOR APIS ====================
 
 // List all users for administration

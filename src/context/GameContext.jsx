@@ -117,10 +117,30 @@ export function GameProvider({ children, defaultTab }) {
                 const refreshed = {
                   ...u,
                   ...data,
+                  id: data.id || u.id,
+                  username: data.username || u.username,
+                  email: data.email || u.email,
                   fullName: data.full_name || data.fullName || u.fullName,
                   name: data.full_name || data.username || u?.name,
                   role: data.role || u.role,
                   status: data.status || u.status,
+                  title: data.title || u.title,
+                  position: data.position || u.position,
+                  level: data.level !== undefined ? data.level : (u.level || 1),
+                  exp: data.exp !== undefined ? data.exp : (u.exp || 0),
+                  maxExp: data.max_exp !== undefined ? data.max_exp : (u.maxExp || 1000),
+                  energy: data.energy !== undefined ? data.energy : (u.energy ?? 100),
+                  maxEnergy: data.max_energy !== undefined ? data.max_energy : (u.maxEnergy || 100),
+                  money: data.money !== undefined ? Number(data.money) : (u.money || 0),
+                  gold: data.gold !== undefined ? Number(data.gold) : (u.gold || 0),
+                  partyId: data.party_id !== undefined ? data.party_id : u.partyId,
+                  residenceRegionId: data.residence_region_id || u.residenceRegionId || 'dki',
+                  perks: {
+                    charisma: data.perk_charisma || u.perks?.charisma || 10,
+                    intellect: data.perk_intellect || u.perks?.intellect || 10,
+                    endurance: data.perk_endurance || u.perks?.endurance || 10,
+                    connections: data.perk_connections || u.perks?.connections || 10,
+                  }
                 };
                 setCurrentUser(refreshed);
                 setPlayer(refreshed);
@@ -718,6 +738,77 @@ export function GameProvider({ children, defaultTab }) {
       // ignore quota errors
     }
   }, [player, regions, parties, bills, passedLaws, articles, candidates, nationalState, activeWars, warHistory, commodities, macroEconomy, playerInventory, playerFactories, workHistory, usersList, currentUser, chatMessages, topAttackers]);
+
+  // Real-Time Database Auto-Sync:
+  // Setiap kali player melakukan aktivitas (bekerja, menerima gaji, naik level, membeli aset),
+  // data langsung tersimpan secara permanen ke Supabase dan MySQL agar uang dan progres tidak hilang saat refresh.
+  useEffect(() => {
+    if (!player || (!player.id && !player.username)) return;
+
+    const timeout = setTimeout(() => {
+      // 1. Simpan ke Supabase jika terkonfigurasi
+      if (isSupabaseConfigured()) {
+        const payload = {
+          money: player.money !== undefined ? player.money : 0,
+          gold: player.gold !== undefined ? player.gold : 0,
+          level: player.level || 1,
+          exp: player.exp || 0,
+          max_exp: player.maxExp || 1000,
+          energy: player.energy !== undefined ? player.energy : 100,
+          max_energy: player.maxEnergy || 100,
+          party_id: player.partyId || null,
+          residence_region_id: player.residenceRegionId || 'dki',
+          perk_charisma: player.perks?.charisma || 10,
+          perk_intellect: player.perks?.intellect || 10,
+          perk_endurance: player.perks?.endurance || 10,
+          perk_connections: player.perks?.connections || 10,
+          updated_at: new Date().toISOString()
+        };
+
+        if (player.id) {
+          supabase.from('users').update(payload).eq('id', player.id).then(() => {});
+        } else if (player.username) {
+          supabase.from('users').update(payload).eq('username', player.username).then(() => {});
+        }
+      }
+
+      // 2. Simpan ke backend MySQL lokal jika sedang berjalan di localhost
+      const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      if (isLocalhost) {
+        fetch('http://localhost:3001/api/player/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: player.id || player.username,
+            money: player.money,
+            gold: player.gold,
+            level: player.level,
+            exp: player.exp,
+            maxExp: player.maxExp,
+            energy: player.energy,
+            maxEnergy: player.maxEnergy,
+            partyId: player.partyId,
+            residenceRegionId: player.residenceRegionId,
+            perks: player.perks
+          })
+        }).catch(() => {});
+      }
+    }, 400); // Debounce 400ms untuk efisiensi request
+
+    return () => clearTimeout(timeout);
+  }, [
+    player?.money, 
+    player?.gold, 
+    player?.level, 
+    player?.exp, 
+    player?.energy, 
+    player?.partyId, 
+    player?.residenceRegionId,
+    player?.perks?.charisma,
+    player?.perks?.intellect,
+    player?.perks?.endurance,
+    player?.perks?.connections
+  ]);
 
   // Sync player updates into usersList
   useEffect(() => {
