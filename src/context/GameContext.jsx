@@ -627,10 +627,10 @@ export function GameProvider({ children, defaultTab }) {
 
     const timeout = setTimeout(() => {
       // 1. Simpan ke Supabase jika terkonfigurasi
-      if (isSupabaseConfigured()) {
+      if (isSupabaseConfigured && supabase) {
         const payload = {
-          money: player.money !== undefined ? player.money : 0,
-          gold: player.gold !== undefined ? player.gold : 0,
+          money: player.money !== undefined ? Number(player.money) : 0,
+          gold: player.gold !== undefined ? Number(player.gold) : 0,
           level: player.level || 1,
           exp: player.exp || 0,
           max_exp: player.maxExp || 1000,
@@ -645,11 +645,17 @@ export function GameProvider({ children, defaultTab }) {
           updated_at: new Date().toISOString()
         };
 
-        if (player.id) {
-          supabase.from('users').update(payload).eq('id', player.id).then(() => {});
-        } else if (player.username) {
-          supabase.from('users').update(payload).eq('username', player.username).then(() => {});
-        }
+        const updatePromise = player.id
+          ? supabase.from('users').update(payload).eq('id', player.id)
+          : supabase.from('users').update(payload).eq('username', player.username);
+
+        updatePromise.then(({ error }) => {
+          if (error) {
+            console.error('Supabase users auto-sync failed:', error.message);
+          } else {
+            console.log('✅ Supabase users auto-sync success:', payload.money, payload.gold);
+          }
+        });
       }
     }, 400); // Debounce 400ms untuk efisiensi request
 
@@ -966,16 +972,31 @@ export function GameProvider({ children, defaultTab }) {
     let earnedRp = 12000000 + ((player.perks?.connections || 10) * 500000);
     let earnedGold = 1;
 
+    const newMoney = (player.money || 0) + earnedRp;
+    const newGold = (player.gold || 0) + earnedGold;
+    const newExp = (player.exp || 0) + 60;
+    const newEnergy = Math.max(0, (player.energy || 0) - 20);
+
     setPlayer((prev) => {
       if (!prev) return prev;
       return {
         ...prev,
-        energy: Math.max(0, (prev.energy || 0) - 20),
-        money: (prev.money || 0) + earnedRp,
-        gold: (prev.gold || 0) + earnedGold,
-        exp: (prev.exp || 0) + 60,
+        energy: newEnergy,
+        money: newMoney,
+        gold: newGold,
+        exp: newExp,
       };
     });
+
+    // Immediate sync to Supabase
+    if (isSupabaseConfigured && supabase && (player.id || player.username)) {
+      const syncQuery = player.id
+        ? supabase.from('users').update({ money: newMoney, gold: newGold, exp: newExp, energy: newEnergy, updated_at: new Date().toISOString() }).eq('id', player.id)
+        : supabase.from('users').update({ money: newMoney, gold: newGold, exp: newExp, energy: newEnergy, updated_at: new Date().toISOString() }).eq('username', player.username);
+      syncQuery.then(({ error }) => {
+        if (error) console.error('Supabase mine sync error:', error.message);
+      });
+    }
 
     // Contribute to state treasury
     setNationalState((prev) => ({
@@ -1022,28 +1043,41 @@ export function GameProvider({ children, defaultTab }) {
     const connBonus = 1 + ((player.perks?.connections || 10) * 0.02);
     const finalWage = Math.round(job.wageRp * connBonus);
 
+    const nextExp = (player.exp || 0) + job.rewardExp;
+    let newLevel = player.level || 1;
+    let remainingExp = nextExp;
+    const maxExp = player.maxExp || 1000;
+    if (nextExp >= maxExp) {
+      newLevel += 1;
+      remainingExp = nextExp - maxExp;
+      sounds.playSuccess();
+      showToast(`Selamat! Karir Politik & Pangkat Naik ke Level ${newLevel}!`, 'success');
+    }
+    const newMoney = (player.money || 0) + finalWage;
+    const newEnergy = Math.max(0, (player.energy || 0) - job.energyCost);
+    const newMaxExp = maxExp + (newLevel > (player.level || 1) ? 400 : 0);
+
     setPlayer((prev) => {
       if (!prev) return prev;
-      const nextExp = (prev.exp || 0) + job.rewardExp;
-      let newLevel = prev.level || 1;
-      let remainingExp = nextExp;
-      const maxExp = prev.maxExp || 1000;
-      if (nextExp >= maxExp) {
-        newLevel += 1;
-        remainingExp = nextExp - maxExp;
-        sounds.playSuccess();
-        showToast(`Selamat! Karir Politik & Pangkat Naik ke Level ${newLevel}!`, 'success');
-      }
-
       return {
         ...prev,
-        energy: Math.max(0, (prev.energy || 0) - job.energyCost),
-        money: (prev.money || 0) + finalWage,
+        energy: newEnergy,
+        money: newMoney,
         exp: remainingExp,
         level: newLevel,
-        maxExp: maxExp + (newLevel > (prev.level || 1) ? 400 : 0)
+        maxExp: newMaxExp
       };
     });
+
+    // Immediate sync to Supabase
+    if (isSupabaseConfigured && supabase && (player.id || player.username)) {
+      const syncQuery = player.id
+        ? supabase.from('users').update({ money: newMoney, exp: remainingExp, level: newLevel, max_exp: newMaxExp, energy: newEnergy, updated_at: new Date().toISOString() }).eq('id', player.id)
+        : supabase.from('users').update({ money: newMoney, exp: remainingExp, level: newLevel, max_exp: newMaxExp, energy: newEnergy, updated_at: new Date().toISOString() }).eq('username', player.username);
+      syncQuery.then(({ error }) => {
+        if (error) console.error('Supabase job duty sync error:', error.message);
+      });
+    }
 
     // If job yields resource commodity, store into inventory
     if (job.resourceProduced && job.resourceQty > 0) {
