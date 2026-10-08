@@ -154,17 +154,45 @@ export function GameProvider({ children, defaultTab }) {
 
       // Ambil RUU aktif dari Supabase
       supabase.from('bills').select('*').then(({ data, error }) => {
-        if (!error && Array.isArray(data)) {
-          setBills(data);
-          localStorage.setItem(STORAGE_KEY + '_bills', JSON.stringify(data));
+        if (!error && Array.isArray(data) && data.length > 0) {
+          const normalized = data.map(b => ({
+            ...b,
+            id: b.id,
+            title: b.title,
+            category: b.category,
+            proposedBy: b.proposedBy || b.author_name || (b.party_id ? `Fraksi ${b.party_id.toUpperCase()}` : 'Inisiatif Parlemen'),
+            sponsorPartyId: b.sponsorPartyId || b.party_id || null,
+            description: b.description,
+            impactText: b.impactText || b.impact_summary || '+5% Stabilitas Nasional',
+            votesRequired: b.votesRequired || 51,
+            timeRemainingSeconds: b.timeRemainingSeconds !== undefined ? b.timeRemainingSeconds : 300,
+            status: b.status || 'voting',
+            votes: b.votes || {
+              agree: b.yes_votes || 0,
+              reject: b.no_votes || 0,
+              abstain: 0
+            }
+          }));
+          setBills(normalized);
+          localStorage.setItem(STORAGE_KEY + '_bills', JSON.stringify(normalized));
         }
       });
 
       // Ambil UU yang telah disahkan dari Supabase
       supabase.from('passed_laws').select('*').then(({ data, error }) => {
-        if (!error && Array.isArray(data)) {
-          setPassedLaws(data);
-          localStorage.setItem(STORAGE_KEY + '_laws', JSON.stringify(data));
+        if (!error && Array.isArray(data) && data.length > 0) {
+          const normalizedLaws = data.map(l => ({
+            ...l,
+            id: l.id,
+            title: l.title,
+            category: l.category,
+            passedYear: l.passedYear || (l.passed_at ? new Date(l.passed_at).getFullYear().toString() : '2026'),
+            sponsor: l.sponsor || 'Parlemen RI',
+            summary: l.summary || l.description || '',
+            activeBuff: l.activeBuff || l.national_effects || 'Hukum Nasional Berlaku'
+          }));
+          setPassedLaws(normalizedLaws);
+          localStorage.setItem(STORAGE_KEY + '_laws', JSON.stringify(normalizedLaws));
         }
       });
 
@@ -265,9 +293,27 @@ export function GameProvider({ children, defaultTab }) {
     fetch('http://localhost:3001/api/bills')
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          setBills(data);
-          localStorage.setItem(STORAGE_KEY + '_bills', JSON.stringify(data));
+        if (Array.isArray(data) && data.length > 0) {
+          const normalized = data.map(b => ({
+            ...b,
+            id: b.id,
+            title: b.title,
+            category: b.category,
+            proposedBy: b.proposedBy || b.author_name || (b.party_id ? `Fraksi ${b.party_id.toUpperCase()}` : 'Inisiatif Parlemen'),
+            sponsorPartyId: b.sponsorPartyId || b.party_id || null,
+            description: b.description,
+            impactText: b.impactText || b.impact_summary || '+5% Stabilitas Nasional',
+            votesRequired: b.votesRequired || 51,
+            timeRemainingSeconds: b.timeRemainingSeconds !== undefined ? b.timeRemainingSeconds : 300,
+            status: b.status || 'voting',
+            votes: b.votes || {
+              agree: b.yes_votes || 0,
+              reject: b.no_votes || 0,
+              abstain: 0
+            }
+          }));
+          setBills(normalized);
+          localStorage.setItem(STORAGE_KEY + '_bills', JSON.stringify(normalized));
         }
       })
       .catch(() => {});
@@ -275,9 +321,19 @@ export function GameProvider({ children, defaultTab }) {
     fetch('http://localhost:3001/api/laws')
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          setPassedLaws(data);
-          localStorage.setItem(STORAGE_KEY + '_laws', JSON.stringify(data));
+        if (Array.isArray(data) && data.length > 0) {
+          const normalizedLaws = data.map(l => ({
+            ...l,
+            id: l.id,
+            title: l.title,
+            category: l.category,
+            passedYear: l.passedYear || (l.passed_at ? new Date(l.passed_at).getFullYear().toString() : '2026'),
+            sponsor: l.sponsor || 'Parlemen RI',
+            summary: l.summary || l.description || '',
+            activeBuff: l.activeBuff || l.national_effects || 'Hukum Nasional Berlaku'
+          }));
+          setPassedLaws(normalizedLaws);
+          localStorage.setItem(STORAGE_KEY + '_laws', JSON.stringify(normalizedLaws));
         }
       })
       .catch(() => {});
