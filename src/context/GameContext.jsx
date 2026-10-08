@@ -134,7 +134,7 @@ export function GameProvider({ children, defaultTab }) {
 
       // Ambil data live partai dari Supabase
       supabase.from('parties').select('*').then(({ data, error }) => {
-        if (!error && Array.isArray(data) && data.length > 0) {
+        if (!error && Array.isArray(data)) {
           const mappedParties = data.map(p => ({
             id: p.id,
             name: p.name,
@@ -154,7 +154,7 @@ export function GameProvider({ children, defaultTab }) {
 
       // Ambil RUU aktif dari Supabase
       supabase.from('bills').select('*').then(({ data, error }) => {
-        if (!error && Array.isArray(data) && data.length > 0) {
+        if (!error && Array.isArray(data)) {
           const normalized = data.map(b => ({
             ...b,
             id: b.id,
@@ -180,7 +180,7 @@ export function GameProvider({ children, defaultTab }) {
 
       // Ambil UU yang telah disahkan dari Supabase
       supabase.from('passed_laws').select('*').then(({ data, error }) => {
-        if (!error && Array.isArray(data) && data.length > 0) {
+        if (!error && Array.isArray(data)) {
           const normalizedLaws = data.map(l => ({
             ...l,
             id: l.id,
@@ -209,6 +209,33 @@ export function GameProvider({ children, defaultTab }) {
         if (!error && Array.isArray(data)) {
           setArticles(data);
           localStorage.setItem(STORAGE_KEY + '_articles', JSON.stringify(data));
+        }
+      });
+
+      // Ambil data live provinsi / wilayah dari Supabase
+      supabase.from('regions').select('*').then(({ data, error }) => {
+        if (!error && Array.isArray(data) && data.length > 0) {
+          setRegions(prevList =>
+            prevList.map(r => {
+              const dbReg = data.find(d => d.id === r.id);
+              if (dbReg) {
+                return {
+                  ...r,
+                  name: dbReg.name || r.name,
+                  capital: dbReg.capital || r.capital,
+                  population: dbReg.population !== undefined ? dbReg.population : r.population,
+                  budget: dbReg.budget !== undefined ? dbReg.budget : r.budget,
+                  dominantPartyId: dbReg.dominant_party_id !== undefined ? dbReg.dominant_party_id : r.dominantPartyId,
+                  supportRate: dbReg.support_rate !== undefined ? dbReg.support_rate : r.supportRate,
+                  resource: dbReg.resource || r.resource,
+                  regionalTax: dbReg.tax_rate !== undefined ? dbReg.tax_rate : r.regionalTax,
+                  infrastructure: dbReg.infrastructure_level !== undefined ? dbReg.infrastructure_level : r.infrastructure,
+                  militaryBase: dbReg.defense_power !== undefined ? dbReg.defense_power : r.militaryBase,
+                };
+              }
+              return r;
+            })
+          );
         }
       });
       return;
@@ -271,7 +298,7 @@ export function GameProvider({ children, defaultTab }) {
     fetch('http://localhost:3001/api/parties')
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           const mapped = data.map(p => ({
             id: p.id,
             name: p.name,
@@ -293,7 +320,7 @@ export function GameProvider({ children, defaultTab }) {
     fetch('http://localhost:3001/api/bills')
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           const normalized = data.map(b => ({
             ...b,
             id: b.id,
@@ -321,7 +348,7 @@ export function GameProvider({ children, defaultTab }) {
     fetch('http://localhost:3001/api/laws')
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           const normalizedLaws = data.map(l => ({
             ...l,
             id: l.id,

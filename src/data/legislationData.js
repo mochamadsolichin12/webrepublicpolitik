@@ -1,6 +1,5 @@
-// Data Klasifikasi RUU, Komisi Parlemen, dan Template Hukum Kenegaraan
-// Sistem Legislasi Terintegrasi: Pengajuan RUU Inisiatif Rakyat, Fraksi Parlemen, dan Kepresidenan
-
+// Data Klasifikasi RUU & Komisi Parlemen
+// LAW_TEMPLATES dikosongkan agar formulir RUU murni dibuat dan diinput oleh pemain/fraksi parlemen secara dinamis
 export const LAW_CATEGORIES = [
   {
     id: 'fiskal_ekonomi',
@@ -59,45 +58,4 @@ export const LAW_CATEGORIES = [
   }
 ];
 
-export const LAW_TEMPLATES = [
-  {
-    title: 'RUU Penguatan Lumbung Pangan Nusantara & Kedaulatan Gabah Petani',
-    category: 'Kesejahteraan Sosial, Pertanian & Pangan',
-    komisi: 'Komisi IV Parlemen',
-    treasuryDelta: -12000000000,
-    stabilityDelta: 6,
-    supportDelta: 9,
-    description: 'Mewajibkan pemerintah pusat membeli 100% surplus beras dan jagung petani domestik dengan harga batas atas yang layak, serta membatasi kuota impor komoditas pangan pokok.',
-    impactText: '+12% Kemakmuran Petani Daerah, +6% Ketahanan Pangan Nasional, -$RP 12T APBN'
-  },
-  {
-    title: 'RUU Royalti Progresif Smelter & Bagi Hasil Tambang Kepulauan',
-    category: 'Energi, Pertambangan & Hilirisasi',
-    komisi: 'Komisi VII Parlemen',
-    treasuryDelta: 32000000000,
-    stabilityDelta: 4,
-    supportDelta: 7,
-    description: 'Mewajibkan kenaikan bagi hasil penerimaan negara bukan pajak (PNBP) sebesar 30% ditransfer langsung ke kas daerah penghasil tambang di Maluku, Sulawesi, dan Papua.',
-    impactText: '+$RP 32T Kas Negara, +15% Pembangunan Daerah Tambang, +7% Stabilitas Daerah'
-  },
-  {
-    title: 'RUU Modernisasi Armada Tempur Laut ZEE & Perisai Antariksa',
-    category: 'Pertahanan, ZEE & Hubungan Internasional',
-    komisi: 'Komisi I Parlemen',
-    treasuryDelta: -22000000000,
-    stabilityDelta: 8,
-    supportDelta: 5,
-    description: 'Mengadakan 4 unit kapal selam siluman baru dan satelit militer pengintai untuk memperkuat kendali mutlak teritorial atas Selat Malaka, Laut Natuna Utara, dan Laut Arafura.',
-    impactText: '+20 Poin Pertahanan Nasional, -$RP 22T Kas Negara, +10% Pengaruh Diplomasi'
-  },
-  {
-    title: 'RUU Insentif Pajak Startup Digital & Keringanan Usaha Mikro UMKM',
-    category: 'Ekonomi, Perpajakan & Perbankan',
-    komisi: 'Komisi XI Parlemen',
-    treasuryDelta: 18000000000,
-    stabilityDelta: 5,
-    supportDelta: 8,
-    description: 'Memberikan pembebasan pajak PPh final selama 3 tahun bagi usaha rintisan teknologi dan UMKM lokal dengan omzet di bawah $RP 2 Miliar per tahun.',
-    impactText: '+15.000 Lapangan Kerja Baru, +8% Pertumbuhan Ekonomi, +5% Stabilitas Pasar'
-  }
-];
+export const LAW_TEMPLATES = [];

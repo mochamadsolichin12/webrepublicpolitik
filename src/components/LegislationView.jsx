@@ -353,27 +353,40 @@ export default function LegislationView() {
       {/* TAB 2: TEMPLATE NASKAH RUU UNGGULAN */}
       {activeSubTab === 'templates' && (
         <div className="law-templates-grid">
-          {LAW_TEMPLATES.map((tpl, idx) => (
-            <div key={idx} className="law-template-card glass-panel-gold">
-              <div className="ltc-top">
-                <span className="badge badge-emerald">{tpl.komisi}</span>
-                <span className="badge badge-cyan">{tpl.category}</span>
-              </div>
-              <h3 className="ltc-title">{tpl.title}</h3>
-              <p className="ltc-desc">{tpl.description}</p>
-              <div className="ltc-impact-box">
-                <strong>Proyeksi Dampak:</strong>
-                <span>{tpl.impactText}</span>
-              </div>
-              <button 
-                className="btn-gold btn-use-template"
-                onClick={() => handleSelectTemplate(tpl)}
-              >
-                <Sparkles size={15} />
-                <span>Gunakan & Ajukan Template Ini</span>
+          {LAW_TEMPLATES.length === 0 ? (
+            <div className="empty-state glass-panel" style={{ gridColumn: '1 / -1', padding: '40px 20px', textAlign: 'center' }}>
+              <Scale size={42} color="#fbbf24" style={{ margin: '0 auto 12px' }} />
+              <h3 style={{ color: '#f8fafc', marginBottom: '8px' }}>Belum Ada Template RUU Bawaan</h3>
+              <p style={{ color: '#94a3b8', maxWidth: '500px', margin: '0 auto 16px' }}>
+                Seluruh rancangan undang-undang dirancang langsung secara orisinal oleh fraksi dan anggota dewan melalui formulir pendaftaran.
+              </p>
+              <button className="btn-gold" onClick={() => setActiveSubTab('propose')}>
+                + Buat Naskah RUU Baru
               </button>
             </div>
-          ))}
+          ) : (
+            LAW_TEMPLATES.map((tpl, idx) => (
+              <div key={idx} className="law-template-card glass-panel-gold">
+                <div className="ltc-top">
+                  <span className="badge badge-emerald">{tpl.komisi}</span>
+                  <span className="badge badge-cyan">{tpl.category}</span>
+                </div>
+                <h3 className="ltc-title">{tpl.title}</h3>
+                <p className="ltc-desc">{tpl.description}</p>
+                <div className="ltc-impact-box">
+                  <strong>Proyeksi Dampak:</strong>
+                  <span>{tpl.impactText}</span>
+                </div>
+                <button 
+                  className="btn-gold btn-use-template"
+                  onClick={() => handleSelectTemplate(tpl)}
+                >
+                  <Sparkles size={15} />
+                  <span>Gunakan & Ajukan Template Ini</span>
+                </button>
+              </div>
+            ))
+          )}
         </div>
       )}
 

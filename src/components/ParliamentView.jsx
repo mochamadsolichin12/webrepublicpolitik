@@ -470,45 +470,47 @@ export default function ParliamentView() {
       {/* Tab 3: Propose Bill Form */}
       {activeTab === 'propose' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Template Quick Select */}
-          <div className="glass-panel" style={{ padding: '20px' }}>
-            <h4 style={{ margin: '0 0 10px 0', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem' }}>
-              <Sparkles size={16} /> Rekomendasi Naskah Akademik RUU (Template Cepat):
-            </h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
-              {LAW_TEMPLATES.map((tpl, idx) => (
-                <div 
-                  key={idx} 
-                  style={{
-                    padding: '12px 14px',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    background: 'rgba(15,23,42,0.6)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    gap: '8px',
-                    transition: 'border-color 0.2s'
-                  }}
-                  onClick={() => handleApplyTemplate(tpl)}
-                  onMouseEnter={(e) => e.currentTarget.style.borderColor = '#fbbf24'}
-                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
-                >
-                  <div>
-                    <span style={{ fontSize: '0.72rem', color: '#38bdf8', fontWeight: 'bold' }}>{tpl.komisi}</span>
-                    <h5 style={{ margin: '4px 0', fontSize: '0.85rem', color: '#f8fafc' }}>{tpl.title}</h5>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.4 }}>
-                      {tpl.description.substring(0, 85)}...
-                    </p>
+          {/* Template Quick Select (Jika tersedia) */}
+          {LAW_TEMPLATES.length > 0 && (
+            <div className="glass-panel" style={{ padding: '20px' }}>
+              <h4 style={{ margin: '0 0 10px 0', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem' }}>
+                <Sparkles size={16} /> Rekomendasi Naskah Akademik RUU (Template Cepat):
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
+                {LAW_TEMPLATES.map((tpl, idx) => (
+                  <div 
+                    key={idx} 
+                    style={{
+                      padding: '12px 14px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      background: 'rgba(15,23,42,0.6)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: '8px',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onClick={() => handleApplyTemplate(tpl)}
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = '#fbbf24'}
+                    onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
+                  >
+                    <div>
+                      <span style={{ fontSize: '0.72rem', color: '#38bdf8', fontWeight: 'bold' }}>{tpl.komisi}</span>
+                      <h5 style={{ margin: '4px 0', fontSize: '0.85rem', color: '#f8fafc' }}>{tpl.title}</h5>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.4 }}>
+                        {tpl.description.substring(0, 85)}...
+                      </p>
+                    </div>
+                    <button className="btn-secondary" style={{ padding: '4px 8px', fontSize: '0.72rem', alignSelf: 'flex-start' }}>
+                      + Gunakan Draf Ini
+                    </button>
                   </div>
-                  <button className="btn-secondary" style={{ padding: '4px 8px', fontSize: '0.72rem', alignSelf: 'flex-start' }}>
-                    + Gunakan Draf Ini
-                  </button>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Form */}
           <div className="propose-form-container glass-panel">
