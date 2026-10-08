@@ -284,150 +284,6 @@ export function GameProvider({ children, defaultTab }) {
       });
       return;
     }
-
-    // 2. Jika di localhost / environment lokal tanpa Supabase, cek server lokal (hanya jika di hostname localhost)
-    const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-    if (!isLocalhost) {
-      // Di production (Vercel) tanpa Supabase, jangan panggil localhost:3001 agar tidak muncul ERR_CONNECTION_REFUSED
-      setIsDbConnected(false);
-      return;
-    }
-
-    // Health check & DB connection indicator lokal
-    fetch('http://localhost:3001/api/health')
-      .then(r => r.json())
-      .then(d => {
-        if (d.status === 'ok') setIsDbConnected(true);
-      })
-      .catch(() => setIsDbConnected(false));
-
-    fetch('http://localhost:3001/api/auth/registered-users')
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setUsersList(data);
-          localStorage.setItem(STORAGE_KEY + '_users', JSON.stringify(data));
-        }
-      })
-      .catch(() => {});
-
-    const savedUserStr = localStorage.getItem(STORAGE_KEY + '_current_user');
-    if (savedUserStr) {
-      try {
-        const u = JSON.parse(savedUserStr);
-        if (u?.id || u?.username) {
-          const param = u.id ? `id=${encodeURIComponent(u.id)}` : `username=${encodeURIComponent(u.username)}`;
-          fetch(`http://localhost:3001/api/auth/verify?${param}`)
-            .then(r => r.json())
-            .then(data => {
-              if (data.success && data.user) {
-                const refreshed = { 
-                  ...u, 
-                  ...data.user, 
-                  name: data.user.fullName || data.user.username || u?.name,
-                  role: data.user.role 
-                };
-                setCurrentUser(refreshed);
-                setPlayer(refreshed);
-                localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(refreshed));
-                localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(refreshed));
-              }
-            })
-            .catch(() => {});
-        }
-      } catch {}
-    }
-
-    // Ambil data live dari server backend lokal jika tersedia
-    fetch('http://localhost:3001/api/parties')
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          const mapped = data.map(p => ({
-            id: p.id,
-            name: p.name,
-            shortName: p.short_name || p.shortName,
-            leader: p.leader,
-            ideology: p.ideology,
-            color: p.color,
-            seats: p.seats || 0,
-            treasury: p.funds || p.treasury || 0,
-            membersCount: p.members_count || p.membersCount || 0,
-            slogan: p.description || p.slogan || '',
-          }));
-          setParties(mapped);
-          localStorage.setItem(STORAGE_KEY + '_parties', JSON.stringify(mapped));
-        }
-      })
-      .catch(() => {});
-
-    fetch('http://localhost:3001/api/bills')
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          const normalized = data.map(b => ({
-            ...b,
-            id: b.id,
-            title: b.title,
-            category: b.category,
-            proposedBy: b.proposedBy || b.author_name || (b.party_id ? `Fraksi ${b.party_id.toUpperCase()}` : 'Inisiatif Parlemen'),
-            sponsorPartyId: b.sponsorPartyId || b.party_id || null,
-            description: b.description,
-            impactText: b.impactText || b.impact_summary || '+5% Stabilitas Nasional',
-            votesRequired: b.votesRequired || 51,
-            timeRemainingSeconds: b.timeRemainingSeconds !== undefined ? b.timeRemainingSeconds : 300,
-            status: b.status || 'voting',
-            votes: b.votes || {
-              agree: b.yes_votes || 0,
-              reject: b.no_votes || 0,
-              abstain: 0
-            }
-          }));
-          setBills(normalized);
-          localStorage.setItem(STORAGE_KEY + '_bills', JSON.stringify(normalized));
-        }
-      })
-      .catch(() => {});
-
-    fetch('http://localhost:3001/api/laws')
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          const normalizedLaws = data.map(l => ({
-            ...l,
-            id: l.id,
-            title: l.title,
-            category: l.category,
-            passedYear: l.passedYear || (l.passed_at ? new Date(l.passed_at).getFullYear().toString() : '2026'),
-            sponsor: l.sponsor || 'Parlemen RI',
-            summary: l.summary || l.description || '',
-            activeBuff: l.activeBuff || l.national_effects || 'Hukum Nasional Berlaku'
-          }));
-          setPassedLaws(normalizedLaws);
-          localStorage.setItem(STORAGE_KEY + '_laws', JSON.stringify(normalizedLaws));
-        }
-      })
-      .catch(() => {});
-
-    fetch('http://localhost:3001/api/elections')
-      .then(r => r.json())
-      .then(data => {
-        if (data?.candidates && Array.isArray(data.candidates)) {
-          setCandidates(data.candidates);
-          localStorage.setItem(STORAGE_KEY + '_candidates', JSON.stringify(data.candidates));
-        }
-      })
-      .catch(() => {});
-
-    fetch('http://localhost:3001/api/articles')
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setArticles(data);
-          localStorage.setItem(STORAGE_KEY + '_articles', JSON.stringify(data));
-        }
-      })
-      .catch(() => {});
   }, []);
 
   const [regions, setRegions] = useState(() => {
@@ -794,28 +650,6 @@ export function GameProvider({ children, defaultTab }) {
         } else if (player.username) {
           supabase.from('users').update(payload).eq('username', player.username).then(() => {});
         }
-      }
-
-      // 2. Simpan ke backend MySQL lokal jika sedang berjalan di localhost
-      const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-      if (isLocalhost) {
-        fetch('http://localhost:3001/api/player/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: player.id || player.username,
-            money: player.money,
-            gold: player.gold,
-            level: player.level,
-            exp: player.exp,
-            maxExp: player.maxExp,
-            energy: player.energy,
-            maxEnergy: player.maxEnergy,
-            partyId: player.partyId,
-            residenceRegionId: player.residenceRegionId,
-            perks: player.perks
-          })
-        }).catch(() => {});
       }
     }, 400); // Debounce 400ms untuk efisiensi request
 
@@ -2130,48 +1964,7 @@ export function GameProvider({ children, defaultTab }) {
       }
     }
 
-    // 2. Jika di localhost, coba hubungi server Express backend lokal
-    const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-    if (isLocalhost) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1200);
-
-        const res = await fetch('http://localhost:3001/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: idClean, password }),
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        const data = await res.json();
-        
-        if (res.ok && data.success && data.user) {
-          const rawDbUser = data.user;
-          const dbUser = {
-            ...rawDbUser,
-            name: rawDbUser.fullName || rawDbUser.username,
-            votedBills: rawDbUser.votedBills || {},
-            votedPresidentId: rawDbUser.votedPresidentId || null,
-            perks: rawDbUser.perks || { charisma: 10, intellect: 10, endurance: 10, connections: 10 },
-          };
-          setCurrentUser(dbUser);
-          setPlayer(dbUser);
-          setUsersList(prev => [...prev.filter(u => u.id !== dbUser.id), dbUser]);
-          localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(dbUser));
-          localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(dbUser));
-          sounds.playSuccess();
-          
-          const roleBadge = dbUser.role === 'superadmin' ? 'Super Administrator' : dbUser.role === 'moderator' ? 'Moderator Penegak' : 'Warga / Player';
-          showToast(`Otoritas (${roleBadge}) diverifikasi dari Database Server! Selamat datang, ${dbUser.fullName}!`, 'success');
-          return { success: true, user: dbUser };
-        }
-      } catch {
-        // Backend lokal offline
-      }
-    }
-
-    // 3. Local Cache & DEMO Accounts Fallback
+    // 2. Local Cache & DEMO Accounts Fallback
     const candidatePool = [
       ...usersList,
       DEMO_ACCOUNTS.superadmin
@@ -2211,30 +2004,42 @@ export function GameProvider({ children, defaultTab }) {
     sounds.playClick();
     if (!userObj) return { success: false };
 
-    try {
-      const param = userObj.id ? `id=${encodeURIComponent(userObj.id)}` : `username=${encodeURIComponent(userObj.username)}`;
-      const res = await fetch(`http://localhost:3001/api/auth/verify?${param}`);
-      const data = await res.json();
-      const verifiedUser = (data.success && data.user) ? data.user : userObj;
-      
-      setCurrentUser(verifiedUser);
-      setPlayer(verifiedUser);
-      localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(verifiedUser));
-      localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(verifiedUser));
-      sounds.playSuccess();
-      
-      const roleBadge = verifiedUser.role === 'superadmin' ? 'Super Administrator' : verifiedUser.role === 'moderator' ? 'Moderator Penegak' : 'Warga / Player';
-      showToast(`Login langsung berhasil! Role (${roleBadge}) aktif dari Database.`, 'success');
-      return { success: true, user: verifiedUser };
-    } catch {
-      setCurrentUser(userObj);
-      setPlayer(userObj);
-      localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(userObj));
-      localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(userObj));
-      sounds.playSuccess();
-      showToast(`Login berhasil sebagai ${userObj.fullName || userObj.username}!`, 'success');
-      return { success: true, user: userObj };
+    // Ambil data user terbaru dari Supabase jika ada
+    if (isSupabaseConfigured && supabase && (userObj.id || userObj.username)) {
+      try {
+        const query = userObj.id 
+          ? supabase.from('users').select('*').eq('id', userObj.id).maybeSingle()
+          : supabase.from('users').select('*').eq('username', userObj.username).maybeSingle();
+        const { data: suData } = await query;
+        if (suData) {
+          const verifiedUser = {
+            ...userObj,
+            ...suData,
+            fullName: suData.full_name || userObj.fullName,
+            name: suData.full_name || userObj.username,
+            role: suData.role || userObj.role || 'player',
+            money: suData.money !== undefined ? Number(suData.money) : userObj.money,
+            gold: suData.gold !== undefined ? Number(suData.gold) : userObj.gold,
+          };
+          setCurrentUser(verifiedUser);
+          setPlayer(verifiedUser);
+          localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(verifiedUser));
+          localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(verifiedUser));
+          sounds.playSuccess();
+          const roleBadge = verifiedUser.role === 'superadmin' ? 'Super Administrator' : verifiedUser.role === 'moderator' ? 'Moderator Penegak' : 'Warga / Player';
+          showToast(`Login langsung diverifikasi dari Supabase (${roleBadge})!`, 'success');
+          return { success: true, user: verifiedUser };
+        }
+      } catch {}
     }
+
+    setCurrentUser(userObj);
+    setPlayer(userObj);
+    localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(userObj));
+    localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(userObj));
+    sounds.playSuccess();
+    showToast(`Login berhasil sebagai ${userObj.fullName || userObj.username}!`, 'success');
+    return { success: true, user: userObj };
   };
 
   const register = async (formData) => {
@@ -2243,109 +2048,85 @@ export function GameProvider({ children, defaultTab }) {
       return { success: false, error: 'Semua kolom bertanda bintang wajib diisi.' };
     }
 
-    try {
-      const res = await fetch('http://localhost:3001/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        return { success: false, error: data.error || 'Pendaftaran gagal' };
+    const usernameClean = (formData.username || formData.email.split('@')[0]).trim().toLowerCase();
+    const emailClean = formData.email.trim().toLowerCase();
+    const defaultRole = 'player';
+
+    const newUser = {
+      id: 'usr-' + Date.now(),
+      username: usernameClean,
+      email: emailClean,
+      phone: formData.phone || '0812' + Math.floor(10000000 + Math.random() * 90000000),
+      password: formData.password,
+      passwordHash: formData.password,
+      fullName: formData.fullName.trim(),
+      name: formData.fullName.trim(),
+      title: 'Kader Muda Pergerakan',
+      position: 'Warga & Kader Politik',
+      level: 1,
+      exp: 0,
+      maxExp: 1000,
+      energy: 100,
+      maxEnergy: 100,
+      money: 0,
+      gold: 0,
+      partyId: formData.partyId || null,
+      residenceRegionId: formData.residenceRegionId || 'dki',
+      role: 'player',
+      status: 'active',
+      perks: { charisma: 10, intellect: 10, endurance: 10, connections: 10 },
+      votedBills: {},
+      votedPresidentId: null,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Simpan langsung ke Supabase
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error: suInsertErr } = await supabase.from('users').insert([{
+          id: newUser.id,
+          username: newUser.username,
+          email: newUser.email,
+          password_hash: formData.password,
+          full_name: newUser.fullName,
+          title: newUser.title,
+          position: newUser.position,
+          level: newUser.level,
+          exp: newUser.exp,
+          max_exp: newUser.maxExp,
+          energy: newUser.energy,
+          max_energy: newUser.maxEnergy,
+          money: newUser.money,
+          gold: newUser.gold,
+          party_id: newUser.partyId,
+          residence_region_id: newUser.residenceRegionId,
+          role: newUser.role,
+          status: newUser.status,
+          perk_charisma: 10,
+          perk_intellect: 10,
+          perk_endurance: 10,
+          perk_connections: 10
+        }]);
+
+        if (suInsertErr) {
+          console.warn('Supabase insert warning:', suInsertErr.message);
+        }
+      } catch (err) {
+        console.warn('Supabase register error:', err);
       }
-
-      const rawDbUser = data.user;
-      const dbUser = {
-        ...rawDbUser,
-        name: rawDbUser.fullName || rawDbUser.username,
-        votedBills: rawDbUser.votedBills || {},
-        votedPresidentId: rawDbUser.votedPresidentId || null,
-        perks: rawDbUser.perks || { charisma: 10, intellect: 10, endurance: 10, connections: 10 },
-      };
-      setUsersList(prev => [...prev.filter(u => u.id !== dbUser.id), dbUser]);
-      setCurrentUser(dbUser);
-      setPlayer(dbUser);
-      localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(dbUser));
-      localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(dbUser));
-      sounds.playSuccess();
-      const roleBadge = dbUser.role === 'superadmin' ? 'Super Administrator' : dbUser.role === 'moderator' ? 'Moderator Penegak' : 'Warga / Player';
-      showToast(`Pendaftaran berhasil! Akun Anda aktif dengan role (${roleBadge}) dari Database. Selamat berjuang, ${dbUser.fullName}!`, 'success');
-      return { success: true, user: dbUser };
-    } catch {
-      // Local or Supabase direct register fallback
-      const usernameClean = (formData.username || formData.email.split('@')[0]).trim().toLowerCase();
-      const emailClean = formData.email.trim().toLowerCase();
-      // Alur pendaftaran baru: selalu diberikan akses role 'player' biasa (bukan moderator atau superadmin)
-      const defaultRole = 'player';
-
-      const newUser = {
-        id: 'usr-' + Date.now(),
-        username: usernameClean,
-        email: emailClean,
-        phone: formData.phone || '0812' + Math.floor(10000000 + Math.random() * 90000000),
-        password: formData.password,
-        fullName: formData.fullName.trim(),
-        name: formData.fullName.trim(),
-        title: 'Kader Muda Pergerakan',
-        position: 'Warga & Kader Politik',
-        level: 1,
-        exp: 0,
-        maxExp: 1000,
-        energy: 100,
-        maxEnergy: 100,
-        money: 0,
-        gold: 0,
-        partyId: formData.partyId || null,
-        residenceRegionId: formData.residenceRegionId || 'dki',
-        role: 'player',
-        status: 'active',
-        perks: { charisma: 10, intellect: 10, endurance: 10, connections: 10 },
-        votedBills: {},
-        votedPresidentId: null,
-        createdAt: new Date().toISOString(),
-      };
-
-      if (isSupabaseConfigured && supabase) {
-        try {
-          await supabase.from('users').insert([{
-            id: newUser.id,
-            username: newUser.username,
-            email: newUser.email,
-            password_hash: formData.password,
-            full_name: newUser.fullName,
-            title: newUser.title,
-            position: newUser.position,
-            level: newUser.level,
-            exp: newUser.exp,
-            max_exp: newUser.maxExp,
-            energy: newUser.energy,
-            max_energy: newUser.maxEnergy,
-            money: newUser.money,
-            gold: newUser.gold,
-            party_id: newUser.partyId,
-            residence_region_id: newUser.residenceRegionId,
-            role: newUser.role,
-            status: newUser.status,
-            perk_charisma: 10,
-            perk_intellect: 10,
-            perk_endurance: 10,
-            perk_connections: 10
-          }]);
-        } catch {}
-      }
-
-      setUsersList(prev => [...prev, newUser]);
-      setCurrentUser(newUser);
-      setPlayer(newUser);
-      localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(newUser));
-      localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(newUser));
-      sounds.playSuccess();
-      showToast(`Pendaftaran berhasil! Role: ${defaultRole.toUpperCase()}`, 'success');
-      return { success: true, user: newUser };
     }
+
+    setUsersList(prev => [...prev.filter(u => u.id !== newUser.id), newUser]);
+    setCurrentUser(newUser);
+    setPlayer(newUser);
+    localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(newUser));
+    localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(newUser));
+    sounds.playSuccess();
+    showToast(`Pendaftaran berhasil! Akun Anda aktif di Supabase. Role: ${defaultRole.toUpperCase()}`, 'success');
+    return { success: true, user: newUser };
   };
 
-  // Google / Gmail Direct Sign-In (Pure Role from Database)
+  // Google / Gmail Direct Sign-In (Pure Role from Supabase Database)
   const loginWithGoogle = async (emailInput, nameInput, photoUrl = null) => {
     sounds.playClick();
     if (!emailInput) {
@@ -2353,87 +2134,99 @@ export function GameProvider({ children, defaultTab }) {
     }
 
     const emailClean = emailInput.trim().toLowerCase();
+    const displayName = nameInput?.trim() || emailClean.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    const usernameClean = emailClean.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
 
-    try {
-      const res = await fetch('http://localhost:3001/api/auth/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailClean, name: nameInput, avatar: photoUrl })
-      });
-      const data = await res.json();
-      
-      if (!res.ok || !data.success) {
-        return { success: false, error: data.error || 'Gagal masuk akun Google' };
+    // 1. Cek langsung ke Supabase
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data: suUser, error: suErr } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', emailClean)
+          .maybeSingle();
+
+        if (suUser && !suErr) {
+          const dbUser = {
+            id: suUser.id,
+            username: suUser.username,
+            email: suUser.email,
+            fullName: suUser.full_name || displayName,
+            name: suUser.full_name || displayName,
+            role: suUser.role || 'player',
+            status: suUser.status || 'active',
+            title: suUser.title || 'Warga Berdaulat',
+            position: suUser.position || 'Warga Digital',
+            level: suUser.level || 1,
+            exp: suUser.exp || 0,
+            maxExp: suUser.max_exp || 1000,
+            energy: suUser.energy !== undefined ? suUser.energy : 100,
+            maxEnergy: suUser.max_energy || 100,
+            money: suUser.money !== undefined ? Number(suUser.money) : 0,
+            gold: suUser.gold !== undefined ? Number(suUser.gold) : 0,
+            partyId: suUser.party_id || null,
+            residenceRegionId: suUser.residence_region_id || 'dki',
+            perks: {
+              charisma: suUser.perk_charisma || 10,
+              intellect: suUser.perk_intellect || 10,
+              endurance: suUser.perk_endurance || 10,
+              connections: suUser.perk_connections || 10,
+            },
+            avatar: photoUrl
+          };
+          setCurrentUser(dbUser);
+          setPlayer(dbUser);
+          setUsersList(prev => [...prev.filter(u => u.id !== dbUser.id), dbUser]);
+          localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(dbUser));
+          localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(dbUser));
+          sounds.playSuccess();
+          const roleBadge = dbUser.role === 'superadmin' ? 'Super Administrator' : dbUser.role === 'moderator' ? 'Moderator Penegak' : 'Warga / Player';
+          showToast(`Google SSO berhasil! Otoritas (${roleBadge}) diverifikasi langsung dari Supabase.`, 'success');
+          return { success: true, user: dbUser };
+        } else {
+          // Buat akun baru di Supabase jika belum terdaftar
+          const newId = 'usr-google-' + Date.now();
+          await supabase.from('users').insert([{
+            id: newId,
+            username: usernameClean,
+            email: emailClean,
+            password_hash: 'google_oauth_auth',
+            full_name: displayName,
+            role: 'player',
+            status: 'active',
+            money: 0,
+            gold: 0,
+            level: 1,
+            residence_region_id: 'dki'
+          }]);
+        }
+      } catch (err) {
+        console.warn('Supabase google sign in warning:', err);
       }
-
-      const rawDbUser = data.user;
-      const dbUser = {
-        ...rawDbUser,
-        name: rawDbUser.fullName || rawDbUser.username,
-        votedBills: rawDbUser.votedBills || {},
-        votedPresidentId: rawDbUser.votedPresidentId || null,
-        perks: rawDbUser.perks || { charisma: 10, intellect: 10, endurance: 10, connections: 10 },
-      };
-      setCurrentUser(dbUser);
-      setPlayer(dbUser);
-      localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(dbUser));
-      localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(dbUser));
-      sounds.playSuccess();
-      
-      const roleBadge = dbUser.role === 'superadmin' ? 'Super Administrator' : dbUser.role === 'moderator' ? 'Moderator Penegak' : 'Warga / Player';
-      showToast(`Google SSO berhasil! Otoritas (${roleBadge}) diverifikasi langsung dari database.`, 'success');
-      return { success: true, user: dbUser };
-    } catch {
-      // Offline fallback
-      const displayName = nameInput?.trim() || emailClean.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-      const usernameClean = emailClean.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
-      const existing = usersList.find((u) => u.email && u.email.toLowerCase() === emailClean);
-
-      if (existing) {
-        setCurrentUser(existing);
-        setPlayer(existing);
-        localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(existing));
-        sounds.playSuccess();
-        showToast(`Berhasil masuk dengan Google (${existing.email})! Otoritas: ${(existing.role || 'player').toUpperCase()}`, 'success');
-        return { success: true, user: existing };
-      }
-
-      // Player baru yang login Google hanya diberikan akses role 'player'
-      const defaultRole = 'player';
-      const newGoogleUser = {
-        id: 'usr-google-' + Date.now(),
-        username: usernameClean,
-        email: emailClean,
-        fullName: displayName,
-        name: displayName,
-        title: 'Tokoh Demokrasi Digital',
-        position: 'Warga & Kader Politik',
-        level: 1,
-        exp: 0,
-        maxExp: 1000,
-        energy: 100,
-        maxEnergy: 100,
-        money: 0,
-        gold: 0,
-        partyId: null,
-        residenceRegionId: 'dki',
-        role: 'player',
-        status: 'active',
-        authProvider: 'google',
-        avatar: photoUrl,
-        perks: { charisma: 14, intellect: 15, endurance: 12, connections: 12 },
-        votedBills: {},
-        votedPresidentId: null,
-      };
-
-      setUsersList(prev => [...prev, newGoogleUser]);
-      setCurrentUser(newGoogleUser);
-      setPlayer(newGoogleUser);
-      localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(newGoogleUser));
-      sounds.playSuccess();
-      showToast(`Akun Google (${emailClean}) terdaftar dengan Otoritas: ${defaultRole.toUpperCase()}`, 'success');
-      return { success: true, user: newGoogleUser };
     }
+
+    // Fallback jika offline
+    const newGoogleUser = {
+      id: 'usr-google-' + Date.now(),
+      username: usernameClean,
+      email: emailClean,
+      fullName: displayName,
+      name: displayName,
+      role: 'player',
+      status: 'active',
+      money: 0,
+      gold: 0,
+      level: 1,
+      residenceRegionId: 'dki'
+    };
+    setCurrentUser(newGoogleUser);
+    setPlayer(newGoogleUser);
+    setUsersList(prev => [...prev.filter(u => u.id !== newGoogleUser.id), newGoogleUser]);
+    localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(newGoogleUser));
+    localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(newGoogleUser));
+    sounds.playSuccess();
+    showToast(`Google SSO berhasil! Selamat datang, ${displayName}!`, 'success');
+    return { success: true, user: newGoogleUser };
   };
 
   const logout = () => {
@@ -2486,20 +2279,11 @@ export function GameProvider({ children, defaultTab }) {
     }
     setUsersList(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
     
-    // Simpan ke Supabase jika aktif
+    // Simpan langsung ke Supabase jika aktif
     if (isSupabaseConfigured && supabase) {
       supabase.from('users').update({ role: newRole, updated_at: new Date().toISOString() }).eq('id', userId).then(() => {});
     }
 
-    try {
-      await fetch('http://localhost:3001/api/admin/user/role', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, role: newRole })
-      });
-    } catch {
-      // offline/fallback
-    }
     sounds.playSuccess();
     showToast(`Role pengguna berhasil diubah menjadi ${newRole.toUpperCase()}!`, 'success');
     return { success: true };
@@ -2514,20 +2298,11 @@ export function GameProvider({ children, defaultTab }) {
     }
     setUsersList(prev => prev.map(u => u.id === userId ? { ...u, status: newStatus, moderationReason: reason } : u));
 
-    // Simpan ke Supabase jika aktif
+    // Simpan langsung ke Supabase jika aktif
     if (isSupabaseConfigured && supabase) {
       supabase.from('users').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', userId).then(() => {});
     }
 
-    try {
-      await fetch('http://localhost:3001/api/admin/user/status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, status: newStatus, reason })
-      });
-    } catch {
-      // offline/fallback
-    }
     sounds.playSuccess();
     showToast(`Status pengguna diubah: ${newStatus.toUpperCase()}`, 'info');
     return { success: true };
@@ -2546,17 +2321,18 @@ export function GameProvider({ children, defaultTab }) {
       gold: addGold !== undefined ? prev.gold + addGold : prev.gold,
       level: setLevel !== undefined ? setLevel : prev.level,
     }));
-    try {
-      await fetch('http://localhost:3001/api/admin/user/adjust', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, addMoney, addGold, setLevel })
-      });
-    } catch {
-      // offline
+
+    if (isSupabaseConfigured && supabase) {
+      const updates = {};
+      if (addMoney !== undefined) updates.money = (player.money || 0) + addMoney;
+      if (addGold !== undefined) updates.gold = (player.gold || 0) + addGold;
+      if (setLevel !== undefined) updates.level = setLevel;
+      updates.updated_at = new Date().toISOString();
+      supabase.from('users').update(updates).eq('id', userId).then(() => {});
     }
+
     sounds.playCoin();
-    showToast('Injeksi atribut & keuangan berhasil!', 'success');
+    showToast('Injeksi atribut & keuangan berhasil di Supabase!', 'success');
   };
 
   // Super Admin: Reset Password Player secara aman (Admin Overwrite Password Baru)
@@ -2566,18 +2342,14 @@ export function GameProvider({ children, defaultTab }) {
       showToast('Hanya Super Admin yang berhak menyetel ulang kata sandi pemain!', 'error');
       return { success: false };
     }
-    setUsersList(prev => prev.map(u => u.id === userId ? { ...u, password: newPassword } : u));
-    try {
-      await fetch('http://localhost:3001/api/admin/user/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, newPassword })
-      });
-    } catch {
-      // offline fallback
+    setUsersList(prev => prev.map(u => u.id === userId ? { ...u, password: newPassword, password_hash: newPassword } : u));
+    
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('users').update({ password_hash: newPassword, updated_at: new Date().toISOString() }).eq('id', userId).then(() => {});
     }
+
     sounds.playSuccess();
-    showToast('Kata sandi pengguna berhasil disetel ulang!', 'success');
+    showToast('Kata sandi pengguna berhasil disetel ulang di Supabase!', 'success');
     return { success: true };
   };
 
@@ -2608,17 +2380,20 @@ export function GameProvider({ children, defaultTab }) {
       setPlayer(prev => ({ ...prev, ...updatedData }));
     }
 
-    try {
-      await fetch('http://localhost:3001/api/admin/user/edit-details', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, ...updatedData })
-      });
-    } catch {
-      // offline
+    if (isSupabaseConfigured && supabase) {
+      const suPayload = {
+        full_name: updatedData.fullName,
+        level: updatedData.level !== undefined ? Number(updatedData.level) : undefined,
+        money: updatedData.money !== undefined ? Number(updatedData.money) : undefined,
+        gold: updatedData.gold !== undefined ? Number(updatedData.gold) : undefined,
+        updated_at: new Date().toISOString()
+      };
+      Object.keys(suPayload).forEach(k => suPayload[k] === undefined && delete suPayload[k]);
+      supabase.from('users').update(suPayload).eq('id', userId).then(() => {});
     }
+
     sounds.playSuccess();
-    showToast('Data pemain berhasil diperbarui di database!', 'success');
+    showToast('Data pemain berhasil diperbarui di Supabase database!', 'success');
     return { success: true };
   };
 
