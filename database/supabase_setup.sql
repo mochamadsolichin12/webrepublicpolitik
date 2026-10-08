@@ -91,10 +91,11 @@ CREATE TABLE IF NOT EXISTS bill_votes (
     id BIGSERIAL PRIMARY KEY,
     bill_id TEXT NOT NULL REFERENCES bills(id) ON DELETE CASCADE,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    vote TEXT NOT NULL CHECK(vote IN ('yes', 'no')),
+    vote TEXT NOT NULL CHECK(vote IN ('yes', 'no', 'agree', 'reject', 'abstain')),
     voted_at TIMESTAMPTZ DEFAULT NOW(),
     CONSTRAINT uq_bill_user UNIQUE (bill_id, user_id)
 );
+
 
 -- ==================== 6. TABEL UNDANG-UNDANG DISAHKAN (PASSED_LAWS) ====================
 CREATE TABLE IF NOT EXISTS passed_laws (
@@ -245,6 +246,9 @@ BEGIN
 
     DROP POLICY IF EXISTS "Public Read Bills" ON bills;
     CREATE POLICY "Public Read Bills" ON bills FOR SELECT USING (true);
+
+    DROP POLICY IF EXISTS "Public Read Bill Votes" ON bill_votes;
+    CREATE POLICY "Public Read Bill Votes" ON bill_votes FOR SELECT USING (true);
 
     DROP POLICY IF EXISTS "Public Read Laws" ON passed_laws;
     CREATE POLICY "Public Read Laws" ON passed_laws FOR SELECT USING (true);

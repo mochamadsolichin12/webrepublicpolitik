@@ -166,10 +166,24 @@ export function GameProvider({ children, defaultTab }) {
                     connections: data.perk_connections || u.perks?.connections || 10,
                   }
                 };
-                setCurrentUser(refreshed);
-                setPlayer(refreshed);
-                localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(refreshed));
-                localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(refreshed));
+
+                // Ambil daftar voting RUU yang pernah dilakukan oleh user ini dari Supabase
+                supabase.from('bill_votes').select('bill_id, vote').eq('user_id', refreshed.id).then(({ data: userVotes, error: uvErr }) => {
+                  const votedBillsMap = {};
+                  if (!uvErr && Array.isArray(userVotes)) {
+                    userVotes.forEach((v) => {
+                      votedBillsMap[v.bill_id] = v.vote === 'yes' ? 'agree' : (v.vote === 'no' ? 'reject' : v.vote);
+                    });
+                  }
+                  const withVotes = {
+                    ...refreshed,
+                    votedBills: { ...(u.votedBills || {}), ...votedBillsMap }
+                  };
+                  setCurrentUser(withVotes);
+                  setPlayer(withVotes);
+                  localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(withVotes));
+                  localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(withVotes));
+                });
               }
             });
           }
@@ -197,26 +211,39 @@ export function GameProvider({ children, defaultTab }) {
       });
 
       // Ambil RUU aktif dari Supabase
-      supabase.from('bills').select('*').then(({ data, error }) => {
+      supabase.from('bills').select('*').then(async ({ data, error }) => {
         if (!error && Array.isArray(data)) {
-          const normalized = data.map(b => ({
-            ...b,
-            id: b.id,
-            title: b.title,
-            category: b.category,
-            proposedBy: b.proposedBy || b.author_name || (b.party_id ? `Fraksi ${b.party_id.toUpperCase()}` : 'Inisiatif Parlemen'),
-            sponsorPartyId: b.sponsorPartyId || b.party_id || null,
-            description: b.description,
-            impactText: b.impactText || b.impact_summary || '+5% Stabilitas Nasional',
-            votesRequired: b.votesRequired || 51,
-            timeRemainingSeconds: b.timeRemainingSeconds !== undefined ? b.timeRemainingSeconds : 300,
-            status: b.status || 'voting',
-            votes: b.votes || {
-              agree: b.yes_votes || 0,
-              reject: b.no_votes || 0,
-              abstain: 0
-            }
-          }));
+          // Ambil rincian vote dari bill_votes
+          const { data: allBillVotes } = await supabase.from('bill_votes').select('*');
+          const votesByBill = {};
+          if (Array.isArray(allBillVotes)) {
+            allBillVotes.forEach((bv) => {
+              if (!votesByBill[bv.bill_id]) {
+                votesByBill[bv.bill_id] = { agree: 0, reject: 0, abstain: 0 };
+              }
+              if (bv.vote === 'yes' || bv.vote === 'agree') votesByBill[bv.bill_id].agree += 1;
+              else if (bv.vote === 'no' || bv.vote === 'reject') votesByBill[bv.bill_id].reject += 1;
+              else if (bv.vote === 'abstain') votesByBill[bv.bill_id].abstain += 1;
+            });
+          }
+
+          const normalized = data.map(b => {
+            const recordedVotes = votesByBill[b.id] || { agree: b.yes_votes || 0, reject: b.no_votes || 0, abstain: 0 };
+            return {
+              ...b,
+              id: b.id,
+              title: b.title,
+              category: b.category,
+              proposedBy: b.proposedBy || b.author_name || (b.party_id ? `Fraksi ${b.party_id.toUpperCase()}` : 'Inisiatif Parlemen'),
+              sponsorPartyId: b.sponsorPartyId || b.party_id || null,
+              description: b.description,
+              impactText: b.impactText || b.impact_summary || '+5% Stabilitas Nasional',
+              votesRequired: b.votesRequired || 51,
+              timeRemainingSeconds: b.timeRemainingSeconds !== undefined ? b.timeRemainingSeconds : 300,
+              status: b.status || 'voting',
+              votes: recordedVotes
+            };
+          });
           setBills(normalized);
           localStorage.setItem(STORAGE_KEY + '_bills', JSON.stringify(normalized));
         }
@@ -1242,6 +1269,8 @@ export function GameProvider({ children, defaultTab }) {
       return;
     }
 
+    const normalizedChoice = voteChoice === 'agree' ? 'yes' : (voteChoice === 'reject' ? 'no' : voteChoice);
+
     setBills((prevBills) =>
       prevBills.map((bill) => {
         if (bill.id !== billId || bill.status !== 'voting') return bill;
@@ -1250,17 +1279,37 @@ export function GameProvider({ children, defaultTab }) {
           [voteChoice]: (bill.votes[voteChoice] || 0) + 1,
         };
 
-        // Persist vote to Supabase if configured
+        const updatedPartySupport = {
+          ...(bill.partySupport || {}),
+          ...(player.partyId ? { [player.partyId]: voteChoice } : {})
+        };
+
+        // Persist vote and tally to Supabase if configured
         if (isSupabaseConfigured && supabase) {
+          // 1. Update bill tally
           supabase.from('bills').update({
             yes_votes: updatedVotes.agree || 0,
             no_votes: updatedVotes.reject || 0,
           }).eq('id', billId).then(({ error }) => {
             if (error) console.error('Supabase vote update error:', error.message);
           });
+
+          // 2. Insert into bill_votes table (record individual voter)
+          if (player.id && (normalizedChoice === 'yes' || normalizedChoice === 'no')) {
+            supabase.from('bill_votes').upsert([
+              {
+                bill_id: billId,
+                user_id: player.id,
+                vote: normalizedChoice,
+                voted_at: new Date().toISOString()
+              }
+            ], { onConflict: 'bill_id,user_id' }).then(({ error: bvErr }) => {
+              if (bvErr) console.error('Supabase bill_votes insert error:', bvErr.message);
+            });
+          }
         }
 
-        return { ...bill, votes: updatedVotes };
+        return { ...bill, votes: updatedVotes, partySupport: updatedPartySupport };
       })
     );
 
@@ -1303,16 +1352,14 @@ export function GameProvider({ children, defaultTab }) {
       description: newBillData.description,
       impactText: newBillData.impactText || '+5% Stabilitas Nasional, Penyesuaian Anggaran Negara',
       votesRequired: 51,
-      timeRemainingSeconds: 180,
+      timeRemainingSeconds: 300,
       status: 'voting',
       votes: {
-        agree: playerParty?.seats || 20,
-        reject: 12,
-        abstain: 4,
+        agree: 0,
+        reject: 0,
+        abstain: 0,
       },
-      partySupport: player.partyId ? {
-        [player.partyId]: 'agree',
-      } : {},
+      partySupport: {},
       nationalEffect: {
         treasuryDelta: newBillData.treasuryDelta || 10000000000,
         stabilityDelta: newBillData.stabilityDelta || 4,
