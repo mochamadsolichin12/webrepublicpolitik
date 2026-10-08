@@ -234,6 +234,8 @@ export function GameProvider({ children, defaultTab }) {
               id: b.id,
               title: b.title,
               category: b.category,
+              authorId: b.author_id || b.authorId,
+              author_id: b.author_id,
               proposedBy: b.proposedBy || b.author_name || (b.party_id ? `Fraksi ${b.party_id.toUpperCase()}` : 'Inisiatif Parlemen'),
               sponsorPartyId: b.sponsorPartyId || b.party_id || null,
               description: b.description,
@@ -1347,6 +1349,7 @@ export function GameProvider({ children, defaultTab }) {
       id: 'bill-' + Date.now(),
       title: newBillData.title,
       category: newBillData.category || 'Hukum & Tata Negara',
+      authorId: player.id || 'usr-player',
       proposedBy: `${player.fullName || player.username || 'Warga'} (${playerParty?.shortName || 'Independen'})`,
       sponsorPartyId: player.partyId || null,
       description: newBillData.description,
@@ -1402,6 +1405,65 @@ export function GameProvider({ children, defaultTab }) {
 
     sounds.playGavel();
     showToast('Naskah RUU berhasil didaftarkan ke Badan Legislasi Parlemen!', 'success');
+  };
+
+  // 6b. Withdraw / Cancel Proposed Bill (Cabut Undang-Undang yang Sedang Diajukan)
+  const withdrawBill = (billId) => {
+    sounds.playClick();
+    if (!player) {
+      showToast('Silakan masuk / login terlebih dahulu.', 'error');
+      return;
+    }
+
+    const targetBill = bills.find((b) => b.id === billId);
+    if (!targetBill) {
+      showToast('RUU tidak ditemukan.', 'error');
+      return;
+    }
+
+    // Hanya pengusul RUU atau Superadmin / Pimpinan Parlemen yang dapat mencabut RUU
+    const isAuthor = targetBill.authorId === player.id || targetBill.author_id === player.id || (targetBill.proposedBy && targetBill.proposedBy.includes(player.username || player.fullName));
+    const isAdmin = player.role === 'superadmin' || player.role === 'moderator';
+
+    if (!isAuthor && !isAdmin) {
+      showToast('Anda tidak memiliki wewenang untuk mencabut naskah RUU yang diajukan fraksi/kader lain!', 'error');
+      return;
+    }
+
+    if (targetBill.status !== 'voting') {
+      showToast('RUU ini sudah selesai diproses dan tidak dapat dicabut lagi!', 'error');
+      return;
+    }
+
+    // 1. Update status RUU di local state menjadi 'withdrawn' atau hapus dari antrean voting aktif
+    setBills((prevBills) => prevBills.filter((b) => b.id !== billId));
+
+    // 2. Sinkronkan pencabutan RUU ke Supabase (delete dari tabel bills dan bill_votes)
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('bills').delete().eq('id', billId).then(({ error }) => {
+        if (error) {
+          console.error('Supabase withdraw bill error:', error.message);
+        } else {
+          console.log('✅ Supabase bill deleted:', billId);
+        }
+      });
+      supabase.from('bill_votes').delete().eq('bill_id', billId).then(() => {});
+    }
+
+    // 3. Kembalikan 50% biaya naskah akademik sebagai bentuk pengembalian berkas
+    const refund = 10000000; // Rp 10 Juta refund
+    setPlayer((prev) => (prev ? {
+      ...prev,
+      money: (prev.money || 0) + refund,
+    } : prev));
+
+    setNationalState((prev) => ({
+      ...prev,
+      breakingTicker: `PARLEMEN: Pengusul resmi mencabut dan membatalkan pembahasan '${targetBill.title}' dari Sidang Paripurna.`,
+    }));
+
+    sounds.playGavel();
+    showToast(`RUU '${targetBill.title}' berhasil dicabut dan dibatalkan! Dana berkas dikembalikan Rp 10 Juta.`, 'info');
   };
 
   // 7. Vote for Presidential Candidate (Meningkatkan perolehan suara paslon dan mempengaruhi kharisma & retorika kandidat)
@@ -2658,6 +2720,7 @@ export function GameProvider({ children, defaultTab }) {
         investInRegion,
         voteOnBill,
         proposeBill,
+        withdrawBill,
         votePresident,
         nominatePresidentialCandidate,
         joinParty,

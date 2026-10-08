@@ -24,7 +24,8 @@ import {
   TrendingUp,
   Landmark,
   ArrowRight,
-  Vote
+  Vote,
+  Trash2
 } from 'lucide-react';
 
 export default function LegislationView() {
@@ -34,6 +35,7 @@ export default function LegislationView() {
     bills, 
     passedLaws, 
     proposeBill, 
+    withdrawBill,
     voteOnBill, 
     nationalState,
     setActiveTab, 
@@ -464,6 +466,32 @@ export default function LegislationView() {
                       <MinusCircle size={16} /> Abstain
                     </button>
                   </div>
+
+                  {/* Tombol Cabut / Batalkan Pengajuan RUU */}
+                  {(bill.authorId === player?.id || bill.author_id === player?.id || (bill.proposedBy && bill.proposedBy.includes(player?.username || player?.fullName)) || player?.role === 'superadmin') && (
+                    <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px dashed rgba(239,68,68,0.25)', display: 'flex', justifyContent: 'flex-end' }}>
+                      <button
+                        className="btn-secondary"
+                        style={{
+                          color: '#f87171',
+                          borderColor: 'rgba(239,68,68,0.4)',
+                          background: 'rgba(239,68,68,0.08)',
+                          fontSize: '0.75rem',
+                          padding: '4px 10px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                        onClick={() => {
+                          if (window.confirm(`Apakah Anda yakin ingin membatalkan dan mencabut pengajuan RUU '${bill.title}'? Dana riset berkas dikembalikan Rp 10 Juta.`)) {
+                            withdrawBill(bill.id);
+                          }
+                        }}
+                      >
+                        <Trash2 size={13} /> Cabut / Batalkan RUU
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}

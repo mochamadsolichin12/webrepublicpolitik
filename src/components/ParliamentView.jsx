@@ -22,7 +22,9 @@ import {
   Check,
   Flame,
   Shield,
-  HeartHandshake
+  HeartHandshake,
+  Trash2,
+  Ban
 } from 'lucide-react';
 
 export default function ParliamentView() {
@@ -33,6 +35,7 @@ export default function ParliamentView() {
     player, 
     voteOnBill, 
     proposeBill,
+    withdrawBill,
     nationalState,
     showToast
   } = useGame();
@@ -421,6 +424,33 @@ export default function ParliamentView() {
                             onClick={() => voteOnBill(bill.id, 'abstain')}
                           >
                             <MinusCircle size={16} /> ABSTAIN
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Tombol Cabut / Batalkan RUU (Tersedia bagi Pengusul atau Superadmin) */}
+                      {(bill.authorId === player?.id || bill.author_id === player?.id || (bill.proposedBy && bill.proposedBy.includes(player?.username || player?.fullName)) || player?.role === 'superadmin') && (
+                        <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px dashed rgba(239,68,68,0.3)', display: 'flex', justifyContent: 'flex-end' }}>
+                          <button
+                            className="btn-secondary"
+                            style={{ 
+                              color: '#f87171', 
+                              borderColor: 'rgba(239,68,68,0.4)', 
+                              background: 'rgba(239,68,68,0.08)',
+                              fontSize: '0.78rem',
+                              padding: '5px 12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                            }}
+                            onClick={() => {
+                              if (window.confirm(`Apakah Anda yakin ingin mencabut dan membatalkan pengajuan '${bill.title}'? Dana berkas akan dikembalikan Rp 10 Juta.`)) {
+                                withdrawBill(bill.id);
+                              }
+                            }}
+                            title="Cabut Naskah RUU dari Meja Paripurna"
+                          >
+                            <Trash2 size={14} /> Cabut / Batalkan Pengajuan RUU
                           </button>
                         </div>
                       )}
