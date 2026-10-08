@@ -264,21 +264,48 @@ BEGIN
     DROP POLICY IF EXISTS "Public Read Treaties" ON diplomatic_treaties;
     CREATE POLICY "Public Read Treaties" ON diplomatic_treaties FOR SELECT USING (true);
 
-    -- Policy Insert / Update Publik (untuk testing API anon/service_role)
+    -- Policy Insert / Update / Delete Publik untuk semua tabel gameplay
     DROP POLICY IF EXISTS "Public Insert Users" ON users;
     CREATE POLICY "Public Insert Users" ON users FOR ALL USING (true) WITH CHECK (true);
 
     DROP POLICY IF EXISTS "Public Insert Parties" ON parties;
     CREATE POLICY "Public Insert Parties" ON parties FOR ALL USING (true) WITH CHECK (true);
 
+    DROP POLICY IF EXISTS "Public Manage Regions" ON regions;
+    CREATE POLICY "Public Manage Regions" ON regions FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Manage Bills" ON bills;
+    CREATE POLICY "Public Manage Bills" ON bills FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Manage Laws" ON passed_laws;
+    CREATE POLICY "Public Manage Laws" ON passed_laws FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Manage Elections" ON elections;
+    CREATE POLICY "Public Manage Elections" ON elections FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Manage Candidates" ON candidates;
+    CREATE POLICY "Public Manage Candidates" ON candidates FOR ALL USING (true) WITH CHECK (true);
+
     DROP POLICY IF EXISTS "Public Insert Articles" ON articles;
     CREATE POLICY "Public Insert Articles" ON articles FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Insert Article Upvotes" ON article_upvotes;
+    CREATE POLICY "Public Insert Article Upvotes" ON article_upvotes FOR ALL USING (true) WITH CHECK (true);
 
     DROP POLICY IF EXISTS "Public Insert Bill Votes" ON bill_votes;
     CREATE POLICY "Public Insert Bill Votes" ON bill_votes FOR ALL USING (true) WITH CHECK (true);
 
     DROP POLICY IF EXISTS "Public Insert Election Votes" ON election_votes;
     CREATE POLICY "Public Insert Election Votes" ON election_votes FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Manage World Regions" ON world_regions;
+    CREATE POLICY "Public Manage World Regions" ON world_regions FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Manage Treaties" ON diplomatic_treaties;
+    CREATE POLICY "Public Manage Treaties" ON diplomatic_treaties FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Manage Game Logs" ON game_logs;
+    CREATE POLICY "Public Manage Game Logs" ON game_logs FOR ALL USING (true) WITH CHECK (true);
 END
 $$;
 
@@ -313,98 +340,97 @@ INSERT INTO users (
 ) VALUES (
   'usr-satria', 'satria', 'satria@nusantara.id', 'demo_hash_123', 
   'Raden Satria Nusantara', 'Kader Muda Pergerakan', 'Anggota Fraksi DPR RI', 
-  4, 340, 1000, 85, 100, 75000000.0, 45, 'pdin', 
+  4, 340, 1000, 85, 100, 75000000.0, 45, NULL, 
   'dki', 18, 22, 15, 16
 ) ON CONFLICT (id) DO UPDATE SET updated_at = NOW();
 
--- 2. DATA PARTAI POLITIK (Murni Didaftarkan oleh Player Secara Dinamis - Dimulai Kosong)
--- Tidak ada partai bawaan developer; pemain mendirikan partai mereka sendiri melalui panel Partai.
+-- 2. DATA PARTAI POLITIK (Murni Dibuat oleh Player)
+-- Dikosongkan agar murni dibuat oleh pemain
 
 -- 3. DATA 38 PROVINSI REPUBLIK INDONESIA
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('aceh', 'Aceh', 'Banda Aceh', 'sumatera', 5400000, 18500000000, NULL, 74, 'Gas Alam & Kopi Gayo', 10.0, 1, 60, 5.5483, 95.3238) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('aceh', 'Aceh', 'Banda Aceh', 'sumatera', 5400000, 18500000000, 'pksn', 74, 'Gas Alam & Kopi Gayo', 10.0, 1, 60, 5.5483, 95.3238) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('sumut', 'Sumatera Utara', 'Medan', 'sumatera', 15300000, 34200000000, NULL, 68, 'Kelapa Sawit & Perdagangan', 10.0, 1, 60, 3.5952, 98.6722) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('sumut', 'Sumatera Utara', 'Medan', 'sumatera', 15300000, 34200000000, 'pdin', 68, 'Kelapa Sawit & Perdagangan', 10.0, 1, 60, 3.5952, 98.6722) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('sumbar', 'Sumatera Barat', 'Padang', 'sumatera', 5600000, 16000000000, NULL, 71, 'Semen, Pertanian & UMKM', 10.0, 1, 60, -0.9471, 100.4172) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('sumbar', 'Sumatera Barat', 'Padang', 'sumatera', 5600000, 16000000000, 'pksn', 71, 'Semen, Pertanian & UMKM', 10.0, 1, 60, -0.9471, 100.4172) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('riau', 'Riau', 'Pekanbaru', 'sumatera', 6800000, 42000000000, NULL, 79, 'Minyak Bumi & Sawit', 10.0, 1, 60, 0.5071, 101.4478) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('riau', 'Riau', 'Pekanbaru', 'sumatera', 6800000, 42000000000, 'pgr', 79, 'Minyak Bumi & Sawit', 10.0, 1, 60, 0.5071, 101.4478) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('kepri', 'Kepulauan Riau', 'Tanjungpinang / Batam', 'sumatera', 2150000, 31000000000, NULL, 78, 'Manufaktur Elektronik & Maritim Malaka', 10.0, 1, 60, 0.9167, 104.45) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('kepri', 'Kepulauan Riau', 'Tanjungpinang / Batam', 'sumatera', 2150000, 31000000000, 'ptp', 78, 'Manufaktur Elektronik & Maritim Malaka', 10.0, 1, 60, 0.9167, 104.45) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('jambi', 'Jambi', 'Kota Jambi', 'sumatera', 3650000, 21000000000, NULL, 75, 'Minyak Bumi, Batubara & Karet', 10.0, 1, 60, -1.6101, 103.6131) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('jambi', 'Jambi', 'Kota Jambi', 'sumatera', 3650000, 21000000000, 'pgr', 75, 'Minyak Bumi, Batubara & Karet', 10.0, 1, 60, -1.6101, 103.6131) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('bengkulu', 'Bengkulu', 'Kota Bengkulu', 'sumatera', 2080000, 15000000000, NULL, 72, 'Batubara & Perikanan Samudera', 10.0, 1, 60, -3.8004, 102.2655) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('bengkulu', 'Bengkulu', 'Kota Bengkulu', 'sumatera', 2080000, 15000000000, 'pdin', 72, 'Batubara & Perikanan Samudera', 10.0, 1, 60, -3.8004, 102.2655) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('sumsel', 'Sumatera Selatan', 'Palembang', 'sumatera', 8750000, 29000000000, NULL, 76, 'Batubara, Karet & Gas', 10.0, 1, 60, -2.9909, 104.7565) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('sumsel', 'Sumatera Selatan', 'Palembang', 'sumatera', 8750000, 29000000000, 'pgr', 76, 'Batubara, Karet & Gas', 10.0, 1, 60, -2.9909, 104.7565) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('babel', 'Kep. Bangka Belitung', 'Pangkalpinang', 'sumatera', 1520000, 19000000000, NULL, 76, 'Timah Terbesar Dunia & Lada Putih', 10.0, 1, 60, -2.1333, 106.1167) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('babel', 'Kep. Bangka Belitung', 'Pangkalpinang', 'sumatera', 1520000, 19000000000, 'pdin', 76, 'Timah Terbesar Dunia & Lada Putih', 10.0, 1, 60, -2.1333, 106.1167) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('lampung', 'Lampung', 'Bandar Lampung', 'sumatera', 9150000, 22000000000, NULL, 70, 'Pangan, Tebu & Pelabuhan Bakauheni', 10.0, 1, 60, -5.45, 105.2667) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('lampung', 'Lampung', 'Bandar Lampung', 'sumatera', 9150000, 22000000000, 'pdin', 70, 'Pangan, Tebu & Pelabuhan Bakauheni', 10.0, 1, 60, -5.45, 105.2667) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('banten', 'Banten', 'Serang', 'jawa', 12300000, 36000000000, NULL, 76, 'Baja Krakatau & Pelabuhan Merak', 10.0, 1, 60, -6.1104, 106.164) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('banten', 'Banten', 'Serang', 'jawa', 12300000, 36000000000, 'pksn', 76, 'Baja Krakatau & Pelabuhan Merak', 10.0, 1, 60, -6.1104, 106.164) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('dki', 'DKI Jakarta', 'Jakarta Pusat', 'jawa', 10700000, 85000000000, NULL, 65, 'Finansial & Korporasi Global', 10.0, 1, 60, -6.2088, 106.8456) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('dki', 'DKI Jakarta', 'Jakarta Pusat', 'jawa', 10700000, 85000000000, 'ptp', 65, 'Finansial & Korporasi Global', 10.0, 1, 60, -6.2088, 106.8456) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('jabar', 'Jawa Barat', 'Bandung', 'jawa', 49800000, 62000000000, NULL, 72, 'Manufaktur, Otomotif & Tekstil', 10.0, 1, 60, -6.9175, 107.6191) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('jabar', 'Jawa Barat', 'Bandung', 'jawa', 49800000, 62000000000, 'pgr', 72, 'Manufaktur, Otomotif & Tekstil', 10.0, 1, 60, -6.9175, 107.6191) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('jateng', 'Jawa Tengah', 'Semarang', 'jawa', 37200000, 48000000000, NULL, 83, 'Pangan Nasional & Kawasan Industri', 10.0, 1, 60, -7.0051, 110.4381) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('jateng', 'Jawa Tengah', 'Semarang', 'jawa', 37200000, 48000000000, 'pdin', 83, 'Pangan Nasional & Kawasan Industri', 10.0, 1, 60, -7.0051, 110.4381) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('diy', 'DI Yogyakarta', 'Yogyakarta', 'jawa', 3900000, 15000000000, NULL, 88, 'Pendidikan Tinggi, Budaya & Wisata', 10.0, 1, 60, -7.7956, 110.3695) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('diy', 'DI Yogyakarta', 'Yogyakarta', 'jawa', 3900000, 15000000000, 'pkbr', 88, 'Pendidikan Tinggi, Budaya & Wisata', 10.0, 1, 60, -7.7956, 110.3695) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('jatim', 'Jawa Timur', 'Surabaya', 'jawa', 41100000, 58000000000, NULL, 80, 'Industri Berat, Galangan Kapal & Pangan', 10.0, 1, 60, -7.2575, 112.7521) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('jatim', 'Jawa Timur', 'Surabaya', 'jawa', 41100000, 58000000000, 'pkbr', 80, 'Industri Berat, Galangan Kapal & Pangan', 10.0, 1, 60, -7.2575, 112.7521) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('bali', 'Bali', 'Denpasar', 'nusa_tenggara', 4400000, 28000000000, NULL, 86, 'Pariwisata Internasional & Seni Budaya', 10.0, 1, 60, -8.6705, 115.2126) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('bali', 'Bali', 'Denpasar', 'nusa_tenggara', 4400000, 28000000000, 'pdin', 86, 'Pariwisata Internasional & Seni Budaya', 10.0, 1, 60, -8.6705, 115.2126) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('ntb', 'Nusa Tenggara Barat', 'Mataram', 'nusa_tenggara', 5450000, 19000000000, NULL, 73, 'Tambang Tembaga & Mandalika Sport Tourism', 10.0, 1, 60, -8.5833, 116.1167) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('ntb', 'Nusa Tenggara Barat', 'Mataram', 'nusa_tenggara', 5450000, 19000000000, 'pksn', 73, 'Tambang Tembaga & Mandalika Sport Tourism', 10.0, 1, 60, -8.5833, 116.1167) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('ntt', 'Nusa Tenggara Timur', 'Kupang', 'nusa_tenggara', 5520000, 16000000000, NULL, 72, 'Peternakan, Labuan Bajo & Energi Terbarukan', 10.0, 1, 60, -10.1772, 123.607) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('ntt', 'Nusa Tenggara Timur', 'Kupang', 'nusa_tenggara', 5520000, 16000000000, 'pdin', 72, 'Peternakan, Labuan Bajo & Energi Terbarukan', 10.0, 1, 60, -10.1772, 123.607) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('kalbar', 'Kalimantan Barat', 'Pontianak', 'kalimantan', 5450000, 28000000000, NULL, 75, 'Bauksit, Smelter & Perbatasan Serawak', 10.0, 1, 60, -0.0263, 109.3425) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('kalbar', 'Kalimantan Barat', 'Pontianak', 'kalimantan', 5450000, 28000000000, 'pdin', 75, 'Bauksit, Smelter & Perbatasan Serawak', 10.0, 1, 60, -0.0263, 109.3425) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('kalteng', 'Kalimantan Tengah', 'Palangka Raya', 'kalimantan', 2750000, 23000000000, NULL, 78, 'Hutan Konservasi & Sawit', 10.0, 1, 60, -2.2161, 113.9139) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('kalteng', 'Kalimantan Tengah', 'Palangka Raya', 'kalimantan', 2750000, 23000000000, 'pdin', 78, 'Hutan Konservasi & Sawit', 10.0, 1, 60, -2.2161, 113.9139) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('kalsel', 'Kalimantan Selatan', 'Banjarbaru / Banjarmasin', 'kalimantan', 4180000, 27000000000, NULL, 79, 'Batubara, Intan & Pelabuhan Logistik', 10.0, 1, 60, -3.3194, 114.5908) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('kalsel', 'Kalimantan Selatan', 'Banjarbaru / Banjarmasin', 'kalimantan', 4180000, 27000000000, 'pgr', 79, 'Batubara, Intan & Pelabuhan Logistik', 10.0, 1, 60, -3.3194, 114.5908) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('kaltim', 'Kalimantan Timur (IKN)', 'IKN Nusantara / Samarinda', 'kalimantan', 3950000, 55000000000, NULL, 85, 'Ibu Kota Nusantara (IKN), Gas & Batubara', 10.0, 1, 60, -0.5022, 117.1536) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('kaltim', 'Kalimantan Timur (IKN)', 'IKN Nusantara / Samarinda', 'kalimantan', 3950000, 55000000000, 'pgr', 85, 'Ibu Kota Nusantara (IKN), Gas & Batubara', 10.0, 1, 60, -0.5022, 117.1536) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('kaltara', 'Kalimantan Utara', 'Tanjung Selor', 'kalimantan', 740000, 17000000000, NULL, 77, 'Kawasan Industri Hijau (KIPI) & Hidroelektrik', 10.0, 1, 60, 2.8427, 117.3644) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('kaltara', 'Kalimantan Utara', 'Tanjung Selor', 'kalimantan', 740000, 17000000000, 'ptp', 77, 'Kawasan Industri Hijau (KIPI) & Hidroelektrik', 10.0, 1, 60, 2.8427, 117.3644) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('sulut', 'Sulawesi Utara', 'Manado', 'sulawesi', 2680000, 20000000000, NULL, 80, 'Pintu Gerbang Pasifik & Perikanan Tuna', 10.0, 1, 60, 1.4748, 124.8421) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('sulut', 'Sulawesi Utara', 'Manado', 'sulawesi', 2680000, 20000000000, 'pdin', 80, 'Pintu Gerbang Pasifik & Perikanan Tuna', 10.0, 1, 60, 1.4748, 124.8421) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('gorontalo', 'Gorontalo', 'Kota Gorontalo', 'sulawesi', 1220000, 14000000000, NULL, 74, 'Jagung Nasional & Perikanan Teluk Tomini', 10.0, 1, 60, 0.5435, 123.0568) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('gorontalo', 'Gorontalo', 'Kota Gorontalo', 'sulawesi', 1220000, 14000000000, 'pksn', 74, 'Jagung Nasional & Perikanan Teluk Tomini', 10.0, 1, 60, 0.5435, 123.0568) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('sulteng', 'Sulawesi Tengah', 'Palu / Morowali', 'sulawesi', 3120000, 38000000000, NULL, 82, 'Hilirisasi Nikel & Smelter Morowali', 10.0, 1, 60, -0.9003, 119.878) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('sulteng', 'Sulawesi Tengah', 'Palu / Morowali', 'sulawesi', 3120000, 38000000000, 'ptp', 82, 'Hilirisasi Nikel & Smelter Morowali', 10.0, 1, 60, -0.9003, 119.878) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('sulbar', 'Sulawesi Barat', 'Mamuju', 'sulawesi', 1460000, 15500000000, NULL, 74, 'Kakao, Kelapa Sawit & Selat Makassar', 10.0, 1, 60, -2.677, 118.887) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('sulbar', 'Sulawesi Barat', 'Mamuju', 'sulawesi', 1460000, 15500000000, 'pgr', 74, 'Kakao, Kelapa Sawit & Selat Makassar', 10.0, 1, 60, -2.677, 118.887) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('sulsel', 'Sulawesi Selatan', 'Makassar', 'sulawesi', 9350000, 34000000000, NULL, 81, 'Hub Maritim Timur, Nikel Soroako & Pangan', 10.0, 1, 60, -5.1477, 119.4327) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('sulsel', 'Sulawesi Selatan', 'Makassar', 'sulawesi', 9350000, 34000000000, 'pgr', 81, 'Hub Maritim Timur, Nikel Soroako & Pangan', 10.0, 1, 60, -5.1477, 119.4327) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('sultra', 'Sulawesi Tenggara', 'Kendari', 'sulawesi', 2780000, 25000000000, NULL, 76, 'Cadangan Bijih Nikel Terbesar Dunia', 10.0, 1, 60, -3.9985, 122.5126) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('sultra', 'Sulawesi Tenggara', 'Kendari', 'sulawesi', 2780000, 25000000000, 'ptp', 76, 'Cadangan Bijih Nikel Terbesar Dunia', 10.0, 1, 60, -3.9985, 122.5126) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('maluku', 'Maluku', 'Ambon', 'maluku', 1920000, 16500000000, NULL, 77, 'Lumbung Ikan Nasional & Blok Masela', 10.0, 1, 60, -3.6547, 128.1906) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('maluku', 'Maluku', 'Ambon', 'maluku', 1920000, 16500000000, 'pdin', 77, 'Lumbung Ikan Nasional & Blok Masela', 10.0, 1, 60, -3.6547, 128.1906) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('malut', 'Maluku Utara', 'Sofifi / Weda Bay', 'maluku', 1360000, 27000000000, NULL, 84, 'Kawasan Industri Nikel Weda Bay & Rempah', 10.0, 1, 60, 0.73, 127.56) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('malut', 'Maluku Utara', 'Sofifi / Weda Bay', 'maluku', 1360000, 27000000000, 'ptp', 84, 'Kawasan Industri Nikel Weda Bay & Rempah', 10.0, 1, 60, 0.73, 127.56) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('papua', 'Papua (Induk)', 'Jayapura', 'papua', 1120000, 23000000000, NULL, 70, 'Pusat Maritim Pasifik & Perbatasan PNG', 10.0, 1, 60, -2.5916, 140.669) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('papua', 'Papua (Induk)', 'Jayapura', 'papua', 1120000, 23000000000, 'pgr', 70, 'Pusat Maritim Pasifik & Perbatasan PNG', 10.0, 1, 60, -2.5916, 140.669) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('papua_barat_induk', 'Papua Barat', 'Manokwari', 'papua', 570000, 20000000000, NULL, 76, 'Gas Alam Cair Tangguh & Konservasi Hayati', 10.0, 1, 60, -0.8615, 134.062) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('papua_barat_induk', 'Papua Barat', 'Manokwari', 'papua', 570000, 20000000000, 'pdin', 76, 'Gas Alam Cair Tangguh & Konservasi Hayati', 10.0, 1, 60, -0.8615, 134.062) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('papua_barat', 'Papua Barat Daya', 'Sorong / Raja Ampat', 'papua', 630000, 18500000000, NULL, 77, 'Minyak Kasim & Pariwisata Bahari Raja Ampat', 10.0, 1, 60, -0.8762, 131.2558) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('papua_barat', 'Papua Barat Daya', 'Sorong / Raja Ampat', 'papua', 630000, 18500000000, 'pdin', 77, 'Minyak Kasim & Pariwisata Bahari Raja Ampat', 10.0, 1, 60, -0.8762, 131.2558) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('papua_tengah', 'Papua Tengah', 'Nabire / Grasberg', 'papua', 1460000, 45000000000, NULL, 75, 'Tambang Emas & Tembaga Terbesar Grasberg', 10.0, 1, 60, -3.3667, 135.4833) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('papua_tengah', 'Papua Tengah', 'Nabire / Grasberg', 'papua', 1460000, 45000000000, 'pgr', 75, 'Tambang Emas & Tembaga Terbesar Grasberg', 10.0, 1, 60, -3.3667, 135.4833) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('papua_selatan', 'Papua Selatan', 'Merauke', 'papua', 530000, 22000000000, NULL, 78, 'Kawasan Pangan Nasional (Food Estate) & Perbatasan', 10.0, 1, 60, -8.4991, 140.4011) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('papua_selatan', 'Papua Selatan', 'Merauke', 'papua', 530000, 22000000000, 'pgr', 78, 'Kawasan Pangan Nasional (Food Estate) & Perbatasan', 10.0, 1, 60, -8.4991, 140.4011) ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('papua_pegunungan', 'Papua Pegunungan', 'Wamena', 'papua', 1430000, 17500000000, 'pksn', 71, 'Kopi Arabika Wamena & Hasil Bumi Lembah Baliem', 10.0, 1, 60, -4.0984, 138.9439) ON CONFLICT (id) DO NOTHING;
+INSERT INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('papua_pegunungan', 'Papua Pegunungan', 'Wamena', 'papua', 1430000, 17500000000, NULL, 71, 'Kopi Arabika Wamena & Hasil Bumi Lembah Baliem', 10.0, 1, 60, -4.0984, 138.9439) ON CONFLICT (id) DO NOTHING;
 
 -- 4. DATA RANCANGAN UNDANG-UNDANG DPR RI
 
-INSERT INTO bills (id, title, description, category, author_id, author_name, party_id, yes_votes, no_votes, status, impact_summary) VALUES ('bill-tax-reform', 'RUU Pajak Karbon & Insentif Hilirisasi Nikel', 'Mengenakan pajak karbon progresif pada pabrik smelter luar negeri dan memberikan insentif 20% bagi industri hilirisasi domestik di Morowali & Weda Bay.', 'Ekonomi & Tambang', 'usr-satria', '', 'pdin', 0, 0, 'voting', '') ON CONFLICT (id) DO NOTHING;
+INSERT INTO bills (id, title, description, category, author_id, author_name, party_id, yes_votes, no_votes, status, impact_summary) VALUES ('bill-tax-reform', 'RUU Pajak Karbon & Insentif Hilirisasi Nikel', 'Mengenakan pajak karbon progresif pada pabrik smelter luar negeri dan memberikan insentif 20% bagi industri hilirisasi domestik di Morowali & Weda Bay.', 'Ekonomi & Tambang', 'usr-satria', '', NULL, 0, 0, 'voting', '') ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO bills (id, title, description, category, author_id, author_name, party_id, yes_votes, no_votes, status, impact_summary) VALUES ('bill-military-radar', 'RUU Peningkatan Anggaran Radar Pertahanan ZEE Natuna & Papua', 'Mengalokasikan tambahan 15% dari APBN untuk pemasangan sistem radar pertahanan maritim generasi ke-5 serta pangkalan kapal selam di Natuna dan Sorong.', 'Pertahanan & Kedaulatan', 'usr-satria', '', 'pdin', 0, 0, 'voting', '') ON CONFLICT (id) DO NOTHING;
+INSERT INTO bills (id, title, description, category, author_id, author_name, party_id, yes_votes, no_votes, status, impact_summary) VALUES ('bill-military-radar', 'RUU Peningkatan Anggaran Radar Pertahanan ZEE Natuna & Papua', 'Mengalokasikan tambahan 15% dari APBN untuk pemasangan sistem radar pertahanan maritim generasi ke-5 serta pangkalan kapal selam di Natuna dan Sorong.', 'Pertahanan & Kedaulatan', 'usr-satria', '', NULL, 0, 0, 'voting', '') ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO bills (id, title, description, category, author_id, author_name, party_id, yes_votes, no_votes, status, impact_summary) VALUES ('bill-subsidy-umkm', 'RUU Bantuan Tunai & Subsidi Pupuk Petani Desa', 'Menjamin ketersediaan pupuk bersubsidi 100% dan pinjaman lunak bunga 0% untuk 12 juta keluarga petani di Jawa, Sumatera, dan Nusa Tenggara.', 'Kesejahteraan Sosial', 'usr-satria', '', 'pdin', 0, 0, 'voting', '') ON CONFLICT (id) DO NOTHING;
+INSERT INTO bills (id, title, description, category, author_id, author_name, party_id, yes_votes, no_votes, status, impact_summary) VALUES ('bill-subsidy-umkm', 'RUU Bantuan Tunai & Subsidi Pupuk Petani Desa', 'Menjamin ketersediaan pupuk bersubsidi 100% dan pinjaman lunak bunga 0% untuk 12 juta keluarga petani di Jawa, Sumatera, dan Nusa Tenggara.', 'Kesejahteraan Sosial', 'usr-satria', '', NULL, 0, 0, 'voting', '') ON CONFLICT (id) DO NOTHING;
 
 -- 5. DATA UNDANG-UNDANG NASIONAL YANG TELAH DISAHKAN
 
@@ -418,11 +444,11 @@ INSERT INTO passed_laws (id, title, category, description, national_effects) VAL
 
 INSERT INTO elections (id, title, type, term, status, end_time) VALUES ('pemilu-2026', 'Pemilihan Presiden & Wakil Presiden Republik Nusantara', 'presidential', '2026-2031', 'active', (NOW() + INTERVAL '3 days')) ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO candidates (id, election_id, name, running_mate, party_id, votes, vision, promises, color) VALUES ('cand-1', 'pemilu-2026', 'Jend. (Purn) Prabowo Kusumo & Gibran Rakabumi', '', 'pdin', 0, '', '[]', '#f59e0b') ON CONFLICT (id) DO NOTHING;
+INSERT INTO candidates (id, election_id, name, running_mate, party_id, votes, vision, promises, color) VALUES ('cand-1', 'pemilu-2026', 'Jend. (Purn) Prabowo Kusumo & Gibran Rakabumi', '', NULL, 0, '', '[]', '#f59e0b') ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO candidates (id, election_id, name, running_mate, party_id, votes, vision, promises, color) VALUES ('cand-2', 'pemilu-2026', 'Ganjar Pranowo & Mahfud M.D.', '', 'pdin', 0, '', '[]', '#dc2626') ON CONFLICT (id) DO NOTHING;
+INSERT INTO candidates (id, election_id, name, running_mate, party_id, votes, vision, promises, color) VALUES ('cand-2', 'pemilu-2026', 'Ganjar Pranowo & Mahfud M.D.', '', NULL, 0, '', '[]', '#dc2626') ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO candidates (id, election_id, name, running_mate, party_id, votes, vision, promises, color) VALUES ('cand-3', 'pemilu-2026', 'Anies Baswedan & Muhaimin Iskandar', '', 'pdin', 0, '', '[]', '#f97316') ON CONFLICT (id) DO NOTHING;
+INSERT INTO candidates (id, election_id, name, running_mate, party_id, votes, vision, promises, color) VALUES ('cand-3', 'pemilu-2026', 'Anies Baswedan & Muhaimin Iskandar', '', NULL, 0, '', '[]', '#f97316') ON CONFLICT (id) DO NOTHING;
 
 -- 7. DATA KORAN PERS NASIONAL
 

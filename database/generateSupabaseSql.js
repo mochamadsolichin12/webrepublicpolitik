@@ -267,21 +267,48 @@ BEGIN
     DROP POLICY IF EXISTS "Public Read Treaties" ON diplomatic_treaties;
     CREATE POLICY "Public Read Treaties" ON diplomatic_treaties FOR SELECT USING (true);
 
-    -- Policy Insert / Update Publik (untuk testing API anon/service_role)
+    -- Policy Insert / Update / Delete Publik untuk semua tabel gameplay
     DROP POLICY IF EXISTS "Public Insert Users" ON users;
     CREATE POLICY "Public Insert Users" ON users FOR ALL USING (true) WITH CHECK (true);
 
     DROP POLICY IF EXISTS "Public Insert Parties" ON parties;
     CREATE POLICY "Public Insert Parties" ON parties FOR ALL USING (true) WITH CHECK (true);
 
+    DROP POLICY IF EXISTS "Public Manage Regions" ON regions;
+    CREATE POLICY "Public Manage Regions" ON regions FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Manage Bills" ON bills;
+    CREATE POLICY "Public Manage Bills" ON bills FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Manage Laws" ON passed_laws;
+    CREATE POLICY "Public Manage Laws" ON passed_laws FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Manage Elections" ON elections;
+    CREATE POLICY "Public Manage Elections" ON elections FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Manage Candidates" ON candidates;
+    CREATE POLICY "Public Manage Candidates" ON candidates FOR ALL USING (true) WITH CHECK (true);
+
     DROP POLICY IF EXISTS "Public Insert Articles" ON articles;
     CREATE POLICY "Public Insert Articles" ON articles FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Insert Article Upvotes" ON article_upvotes;
+    CREATE POLICY "Public Insert Article Upvotes" ON article_upvotes FOR ALL USING (true) WITH CHECK (true);
 
     DROP POLICY IF EXISTS "Public Insert Bill Votes" ON bill_votes;
     CREATE POLICY "Public Insert Bill Votes" ON bill_votes FOR ALL USING (true) WITH CHECK (true);
 
     DROP POLICY IF EXISTS "Public Insert Election Votes" ON election_votes;
     CREATE POLICY "Public Insert Election Votes" ON election_votes FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Manage World Regions" ON world_regions;
+    CREATE POLICY "Public Manage World Regions" ON world_regions FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Manage Treaties" ON diplomatic_treaties;
+    CREATE POLICY "Public Manage Treaties" ON diplomatic_treaties FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Manage Game Logs" ON game_logs;
+    CREATE POLICY "Public Manage Game Logs" ON game_logs FOR ALL USING (true) WITH CHECK (true);
 END
 $$;
 `;
