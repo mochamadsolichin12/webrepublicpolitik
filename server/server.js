@@ -271,29 +271,13 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'Email atau Username ini sudah terdaftar di database MySQL!' });
     }
 
-    // Role assignment according to registered email in database
-    let assignedRole = 'player';
-    let assignedPosition = 'Warga Negara Berdaulat';
-    let assignedTitle = 'Kader Muda Pergerakan';
-    let assignedLevel = 1;
-    let initialMoney = 0.0;
-    let initialGold = 0;
-
-    if (emailClean === 'admin@nusantara.gov.id' || emailClean.includes('superadmin') || emailClean.includes('solichin')) {
-      assignedRole = 'superadmin';
-      assignedPosition = 'Dewan Pengawas Tertinggi RI';
-      assignedTitle = 'Super Administrator Negara';
-      assignedLevel = 1;
-      initialMoney = 0.0;
-      initialGold = 0;
-    } else if (emailClean === 'moderator@nusantara.gov.id' || emailClean.includes('moderator')) {
-      assignedRole = 'moderator';
-      assignedPosition = 'Dewan Kehormatan Penegak Tertib';
-      assignedTitle = 'Komisioner Pengawas Etik & Media';
-      assignedLevel = 1;
-      initialMoney = 0.0;
-      initialGold = 0;
-    }
+    // Alur pendaftaran baru: Semua akun yang baru mendaftar hanya diberikan akses 'player' (bukan moderator ataupun superadmin)
+    const assignedRole = 'player';
+    const assignedPosition = 'Warga Negara Berdaulat';
+    const assignedTitle = 'Kader Muda Pergerakan';
+    const assignedLevel = 1;
+    const initialMoney = 0.0;
+    const initialGold = 0;
 
     const id = 'usr-' + Date.now();
     await execute(`
@@ -360,8 +344,8 @@ app.post('/api/auth/google', async (req, res) => {
       const usernameClean = emailClean.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
       const fullName = name?.trim() || emailClean.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       
-      // Assign default role based on admin emails or default player
-      const defaultRole = (emailClean.includes('admin') || emailClean.includes('solichin')) ? 'superadmin' : 'player';
+      // Semua pendaftar baru lewat Google hanya mendapat akses role 'player'
+      const defaultRole = 'player';
 
       await execute(`
         INSERT INTO users (
@@ -371,9 +355,9 @@ app.post('/api/auth/google', async (req, res) => {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         id, usernameClean, emailClean, 'sso_google_verified', fullName,
-        defaultRole === 'superadmin' ? 'Super Administrator Negara' : 'Warga Demokrasi Digital',
-        defaultRole === 'superadmin' ? 'Dewan Pengawas Tertinggi RI' : 'Kader & Warga Politik',
-        defaultRole === 'superadmin' ? 1 : 1,
+        'Warga Demokrasi Digital',
+        'Kader & Warga Politik',
+        1,
         0, 1000, 100, 100, 0.0, 0, null, 'dki', defaultRole, 'active'
       ]);
 

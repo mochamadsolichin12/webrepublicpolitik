@@ -2058,7 +2058,8 @@ export function GameProvider({ children, defaultTab }) {
       // Local or Supabase direct register fallback
       const usernameClean = (formData.username || formData.email.split('@')[0]).trim().toLowerCase();
       const emailClean = formData.email.trim().toLowerCase();
-      const defaultRole = (emailClean.includes('admin') || emailClean.includes('solichin')) ? 'superadmin' : emailClean.includes('moderator') ? 'moderator' : 'player';
+      // Alur pendaftaran baru: selalu diberikan akses role 'player' biasa (bukan moderator atau superadmin)
+      const defaultRole = 'player';
 
       const newUser = {
         id: 'usr-' + Date.now(),
@@ -2068,9 +2069,9 @@ export function GameProvider({ children, defaultTab }) {
         password: formData.password,
         fullName: formData.fullName.trim(),
         name: formData.fullName.trim(),
-        title: defaultRole === 'superadmin' ? 'Super Administrator Negara' : 'Kader Muda Pergerakan',
-        position: defaultRole === 'superadmin' ? 'Dewan Pengawas Tertinggi RI' : 'Warga & Kader Politik',
-        level: defaultRole === 'superadmin' ? 99 : 1,
+        title: 'Kader Muda Pergerakan',
+        position: 'Warga & Kader Politik',
+        level: 1,
         exp: 0,
         maxExp: 1000,
         energy: 100,
@@ -2079,7 +2080,7 @@ export function GameProvider({ children, defaultTab }) {
         gold: 0,
         partyId: formData.partyId || null,
         residenceRegionId: formData.residenceRegionId || 'dki',
-        role: defaultRole,
+        role: 'player',
         status: 'active',
         perks: { charisma: 10, intellect: 10, endurance: 10, connections: 10 },
         votedBills: {},
@@ -2180,16 +2181,17 @@ export function GameProvider({ children, defaultTab }) {
         return { success: true, user: existing };
       }
 
-      const defaultRole = (emailClean.includes('admin') || emailClean.includes('solichin')) ? 'superadmin' : 'player';
+      // Player baru yang login Google hanya diberikan akses role 'player'
+      const defaultRole = 'player';
       const newGoogleUser = {
         id: 'usr-google-' + Date.now(),
         username: usernameClean,
         email: emailClean,
         fullName: displayName,
         name: displayName,
-        title: defaultRole === 'superadmin' ? 'Super Administrator Negara' : 'Tokoh Demokrasi Digital',
-        position: defaultRole === 'superadmin' ? 'Dewan Pengawas Tertinggi RI' : 'Warga & Kader Politik',
-        level: defaultRole === 'superadmin' ? 99 : 1,
+        title: 'Tokoh Demokrasi Digital',
+        position: 'Warga & Kader Politik',
+        level: 1,
         exp: 0,
         maxExp: 1000,
         energy: 100,
@@ -2198,7 +2200,7 @@ export function GameProvider({ children, defaultTab }) {
         gold: 0,
         partyId: null,
         residenceRegionId: 'dki',
-        role: defaultRole,
+        role: 'player',
         status: 'active',
         authProvider: 'google',
         avatar: photoUrl,
