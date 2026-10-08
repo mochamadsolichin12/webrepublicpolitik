@@ -317,19 +317,8 @@ INSERT INTO users (
   'dki', 18, 22, 15, 16
 ) ON CONFLICT (id) DO UPDATE SET updated_at = NOW();
 
--- 2. DATA PARTAI POLITIK
-
-INSERT INTO parties (id, name, short_name, leader, ideology, color, seats, funds, members_count, description) VALUES ('pdin', 'Partai Demokrasi Indonesia Nusantara', 'PDI-N', 'Hj. Megawati Soekarno Putri (Ketum Kehormatan)', 'Nasionalis Marhaenis', '#dc2626', 26, 1450000000, 42800, 'Berjuang untuk Kedaulatan Wong Cilik') ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO parties (id, name, short_name, leader, ideology, color, seats, funds, members_count, description) VALUES ('pgr', 'Partai Gerakan Republik', 'PGR', 'Jenderal (Purn) Prabowo Kusumo', 'Nasionalis Patriotik & Militer Terorganisir', '#f59e0b', 24, 1890000000, 39500, 'Nusantara Berdaulat, Militer Tangguh, Pangan Mandiri') ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO parties (id, name, short_name, leader, ideology, color, seats, funds, members_count, description) VALUES ('ptp', 'Partai Teknokrat Pembangunan', 'PTP', 'Dr. Ilham Habibie, M.Sc', 'Teknokrasi, Investasi & Digitalisasi', '#06b6d4', 18, 2150000000, 28400, 'Inovasi, Industri Hijau & Sains Masa Depan') ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO parties (id, name, short_name, leader, ideology, color, seats, funds, members_count, description) VALUES ('pkbr', 'Partai Kebangkitan Bangsa Rakyat', 'PKB-R', 'K.H. Muhaimin Iskandar', 'Moderat Tradisionalis & Ekonomi Kerakyatan', '#10b981', 15, 1100000000, 34100, 'Bela Kesejahteraan Umat & Desa Nusantara') ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO parties (id, name, short_name, leader, ideology, color, seats, funds, members_count, description) VALUES ('pksn', 'Partai Keadilan Sejahtera Nusantara', 'PKS-N', 'Dr. Ahmad Syaikhu', 'Sosial Religius & Oposisi Kritis', '#f97316', 11, 950000000, 22000, 'Keadilan, Integritas, & Pelayan Rakyat') ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO parties (id, name, short_name, leader, ideology, color, seats, funds, members_count, description) VALUES ('psim', 'Partai Solidaritas Maju', 'PSI-M', 'Kaesang Pangarep, B.Sc', 'Reformis Progresif Pemuda & Transparansi', '#a855f7', 6, 820000000, 16700, 'Politik Baru, Anti-Korupsi & Transparansi Total') ON CONFLICT (id) DO NOTHING;
+-- 2. DATA PARTAI POLITIK (Murni Didaftarkan oleh Player Secara Dinamis - Dimulai Kosong)
+-- Tidak ada partai bawaan developer; pemain mendirikan partai mereka sendiri melalui panel Partai.
 
 -- 3. DATA 38 PROVINSI REPUBLIK INDONESIA
 

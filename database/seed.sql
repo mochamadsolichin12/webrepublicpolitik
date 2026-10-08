@@ -15,13 +15,8 @@ INSERT OR REPLACE INTO users (
   'dki', 18, 22, 15, 16
 );
 
--- 2. DATA PARTAI POLITIK
-INSERT OR REPLACE INTO parties (id, name, short_name, leader, ideology, color, seats, funds, members_count, description) VALUES ('pdin', 'Partai Demokrasi Indonesia Nusantara', 'PDI-N', 'Hj. Megawati Soekarno Putri (Ketum Kehormatan)', 'Nasionalis Marhaenis', '#dc2626', 26, 1450000000, 42800, 'Berjuang untuk Kedaulatan Wong Cilik');
-INSERT OR REPLACE INTO parties (id, name, short_name, leader, ideology, color, seats, funds, members_count, description) VALUES ('pgr', 'Partai Gerakan Republik', 'PGR', 'Jenderal (Purn) Prabowo Kusumo', 'Nasionalis Patriotik & Militer Terorganisir', '#f59e0b', 24, 1890000000, 39500, 'Nusantara Berdaulat, Militer Tangguh, Pangan Mandiri');
-INSERT OR REPLACE INTO parties (id, name, short_name, leader, ideology, color, seats, funds, members_count, description) VALUES ('ptp', 'Partai Teknokrat Pembangunan', 'PTP', 'Dr. Ilham Habibie, M.Sc', 'Teknokrasi, Investasi & Digitalisasi', '#06b6d4', 18, 2150000000, 28400, 'Inovasi, Industri Hijau & Sains Masa Depan');
-INSERT OR REPLACE INTO parties (id, name, short_name, leader, ideology, color, seats, funds, members_count, description) VALUES ('pkbr', 'Partai Kebangkitan Bangsa Rakyat', 'PKB-R', 'K.H. Muhaimin Iskandar', 'Moderat Tradisionalis & Ekonomi Kerakyatan', '#10b981', 15, 1100000000, 34100, 'Bela Kesejahteraan Umat & Desa Nusantara');
-INSERT OR REPLACE INTO parties (id, name, short_name, leader, ideology, color, seats, funds, members_count, description) VALUES ('pksn', 'Partai Keadilan Sejahtera Nusantara', 'PKS-N', 'Dr. Ahmad Syaikhu', 'Sosial Religius & Oposisi Kritis', '#f97316', 11, 950000000, 22000, 'Keadilan, Integritas, & Pelayan Rakyat');
-INSERT OR REPLACE INTO parties (id, name, short_name, leader, ideology, color, seats, funds, members_count, description) VALUES ('psim', 'Partai Solidaritas Maju', 'PSI-M', 'Kaesang Pangarep, B.Sc', 'Reformis Progresif Pemuda & Transparansi', '#a855f7', 6, 820000000, 16700, 'Politik Baru, Anti-Korupsi & Transparansi Total');
+-- 2. DATA PARTAI POLITIK (Murni Dibuat oleh Player)
+-- Dikosongkan agar murni dibuat oleh pemain
 
 -- 3. DATA 38 PROVINSI REPUBLIK INDONESIA
 INSERT OR REPLACE INTO regions (id, name, capital, island, population, budget, dominant_party_id, support_rate, resource, tax_rate, infrastructure_level, defense_power, lat, lng) VALUES ('aceh', 'Aceh', 'Banda Aceh', 'sumatera', 5400000, 18500000000, 'pksn', 74, 'Gas Alam & Kopi Gayo', 10.0, 1, 60, 5.5483, 95.3238);
