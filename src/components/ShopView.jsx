@@ -152,86 +152,183 @@ export default function ShopView({ initialSubPage }) {
     }
   };
 
+  // Config visual untuk masing-masing tab/panel
+  const PAGE_CONFIGS = {
+    perbekalan: {
+      badge: 'Sentra Logistik Rakyat',
+      title: 'Pasar Perbekalan & Suplemen Warga',
+      desc: 'Pasar konsumsi stamina harian, obat-obatan fisik, lisensi usaha pertambangan daerah, serta konversi devisa batangan emas murni berstandar BI.',
+      icon: ShoppingBag,
+      color: '#f59e0b',
+      accentClass: 'theme-gold',
+      statLabel: 'Total Menu',
+      statVal: `${SHOP_ITEMS.length} Varian`,
+    },
+    komoditas_beli: {
+      badge: 'Bursa Komoditas Nasional',
+      title: 'Pengadaan & Pembelian Sumber Daya',
+      desc: 'Akses langsung ke cadangan komoditas strategis negara. Beli Minyak Mentah, Nikel HPAL, CPO Sawit, Batubara, Emas, dan Beras untuk bahan baku industri Anda.',
+      icon: Boxes,
+      color: '#38bdf8',
+      accentClass: 'theme-cyan',
+      statLabel: 'Komoditas Terdaftar',
+      statVal: `${commodities.length} Bahan Mentah`,
+    },
+    komoditas_jual: {
+      badge: 'Sentra Likuidasi Komoditas',
+      title: 'Penjualan Hasil Tambang & Panen',
+      desc: 'Cairkan stok hasil kerja shift dinas tambang, perkebunan, dan pabrik Anda langsung ke kas kasir negara untuk mendongkrak saldo Rupiah tunai Anda.',
+      icon: DollarSign,
+      color: '#10b981',
+      accentClass: 'theme-emerald',
+      statLabel: 'Gudang Pribadi',
+      statVal: `${Object.values(playerInventory || {}).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0)} Unit Simpanan`,
+    },
+    militer: {
+      badge: 'Industri Pertahanan Negara (DEFENSE HQ)',
+      title: 'Bursa Pengadaan & Alutsista Senjata Militer',
+      desc: 'Pusat logistik persenjataan angkatan bersenjata. Beli infanteri, armada lapis baja MBT, jet tempur taktis, kapal frigat, dan rudal balistik untuk dominasi perang teritorial.',
+      icon: Swords,
+      color: '#ef4444',
+      accentClass: 'theme-crimson',
+      statLabel: 'Divisi Alutsista',
+      statVal: `${MILITARY_UNITS.length} Alutsista Tempur`,
+    },
+  };
+
+  const currentPageCfg = PAGE_CONFIGS[activeMarketPage] || PAGE_CONFIGS.perbekalan;
+  const ActivePageIcon = currentPageCfg.icon;
+
   return (
     <div className="shop-viewport">
-      {/* 1. HERO HEADER PASAR LOKAL */}
-      <div className="shop-hero-card glass-panel-gold">
+      {/* 1. HERO HEADER PASAR LOKAL ULTRA PREMIUM */}
+      <div className={`shop-hero-card ${currentPageCfg.accentClass}`}>
         <div className="sh-left">
-          <div className="sh-badge">
-            <Store size={16} />
-            <span>Sentra Niaga Nusantara</span>
+          <div className="sh-badge-row">
+            <div className="sh-badge">
+              <Store size={15} />
+              <span>{currentPageCfg.badge}</span>
+            </div>
+            <div className="sh-quick-pulse">
+              <span className="live-pulse-dot"></span>
+              <span>Bursa Buka 24/7 Realtime</span>
+            </div>
           </div>
-          <h2 className="sh-title">Pasar Lokal Republik</h2>
-          <p className="sh-desc">
-            Pusat bursa perdagangan nasional berdaulat. Akses pasar perbekalan logistik, 
-            jual beli komoditas sumber daya strategis rakyat, serta pengadaan alutsista pertahanan negara.
-          </p>
+          
+          <h2 className="sh-title">{currentPageCfg.title}</h2>
+          <p className="sh-desc">{currentPageCfg.desc}</p>
+
+          <div className="sh-quick-metrics">
+            <div className="sqm-item">
+              <span className="sqm-k">{currentPageCfg.statLabel}:</span>
+              <strong className="sqm-v">{currentPageCfg.statVal}</strong>
+            </div>
+            <div className="sqm-item">
+              <span className="sqm-k">Wilayah Pasar:</span>
+              <strong className="sqm-v text-gold">Seluruh 38 Provinsi</strong>
+            </div>
+            <div className="sqm-item">
+              <span className="sqm-k">Pajak Transaksi:</span>
+              <strong className="sqm-v text-emerald">0% (Bebas Bea)</strong>
+            </div>
+          </div>
         </div>
 
         {/* Player Financial Balance Widget */}
-        <div className="sh-balance-box glass-panel">
+        <div className="sh-balance-box glass-panel-premium">
           <div className="sbb-header">
-            <span className="sbb-label">Saldo Keuangan Warga</span>
-            <Sparkles size={16} className="text-gold" />
+            <div className="sbb-title-wrap">
+              <Sparkles size={16} className="text-gold" />
+              <span className="sbb-label">Brankas & Saldo Warga</span>
+            </div>
+            <span className="sbb-status-badge">Aktif</span>
           </div>
           <div className="sbb-stats">
-            <div className="sbb-stat-item">
+            <div className="sbb-stat-item sbb-glow-money">
               <span className="sbb-item-title">Kas Tunai (Rupiah)</span>
-              <strong className="text-emerald">{formatRupiah(player?.money || 0)}</strong>
+              <strong className="text-emerald sbb-number">{formatRupiah(player?.money || 0)}</strong>
             </div>
-            <div className="sbb-stat-item">
+            <div className="sbb-stat-item sbb-glow-gold">
               <span className="sbb-item-title">Cadangan Devisa Emas</span>
-              <strong className="text-gold">{player?.gold || 0} Batang Emas</strong>
+              <strong className="text-gold sbb-number">{player?.gold || 0} Batang Antam</strong>
             </div>
-            <div className="sbb-stat-item">
-              <span className="sbb-item-title">Stamina Fisik</span>
-              <strong className="text-cyan">{player?.energy ?? 100} / {player?.maxEnergy ?? 100} ⚡</strong>
+            <div className="sbb-stat-item sbb-glow-energy">
+              <div className="sbb-item-title-row">
+                <span className="sbb-item-title">Stamina Fisik</span>
+                <span className="sbb-energy-percent">{Math.round(((player?.energy ?? 100) / (player?.maxEnergy ?? 100)) * 100)}%</span>
+              </div>
+              <strong className="text-cyan sbb-number">{player?.energy ?? 100} / {player?.maxEnergy ?? 100} ⚡</strong>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 2. 4 TAB UTAMA PASAR LOKAL */}
+      {/* 2. 4 TAB UTAMA PASAR LOKAL (PREMIUM TAB BAR) */}
       <div className="market-main-tabs">
         <button
-          className={`market-tab-btn ${activeMarketPage === 'perbekalan' ? 'active' : ''}`}
+          className={`market-tab-btn btn-tab-perbekalan ${activeMarketPage === 'perbekalan' ? 'active' : ''}`}
           onClick={() => { sounds.playClick(); setActiveMarketPage('perbekalan'); }}
         >
-          <ShoppingBag size={17} />
-          <span>1. Perbekalan & Suplemen</span>
+          <div className="mtb-icon-box">
+            <ShoppingBag size={18} />
+          </div>
+          <div className="mtb-label-col">
+            <span className="mtb-title">1. Suplemen & Logistik</span>
+            <span className="mtb-sub">Stamina, Kopi & Devisa Emas</span>
+          </div>
         </button>
 
         <button
-          className={`market-tab-btn ${activeMarketPage === 'komoditas_beli' ? 'active' : ''}`}
+          className={`market-tab-btn btn-tab-resources ${activeMarketPage === 'komoditas_beli' ? 'active' : ''}`}
           onClick={() => { sounds.playClick(); setActiveMarketPage('komoditas_beli'); }}
         >
-          <Boxes size={17} />
-          <span>2. Beli Sumber Daya</span>
+          <div className="mtb-icon-box">
+            <Boxes size={18} />
+          </div>
+          <div className="mtb-label-col">
+            <span className="mtb-title">2. Beli Sumber Daya</span>
+            <span className="mtb-sub">Minyak, Nikel, CPO & Batubara</span>
+          </div>
         </button>
 
         <button
-          className={`market-tab-btn ${activeMarketPage === 'komoditas_jual' ? 'active' : ''}`}
+          className={`market-tab-btn btn-tab-sell ${activeMarketPage === 'komoditas_jual' ? 'active' : ''}`}
           onClick={() => { sounds.playClick(); setActiveMarketPage('komoditas_jual'); }}
         >
-          <DollarSign size={17} />
-          <span>3. Jual Sumber Daya</span>
+          <div className="mtb-icon-box">
+            <DollarSign size={18} />
+          </div>
+          <div className="mtb-label-col">
+            <span className="mtb-title">3. Jual Hasil Tambang</span>
+            <span className="mtb-sub">Cairkan Stok ke Saldo Kas</span>
+          </div>
         </button>
 
         <button
-          className={`market-tab-btn ${activeMarketPage === 'militer' ? 'active' : ''}`}
+          className={`market-tab-btn btn-tab-military ${activeMarketPage === 'militer' ? 'active' : ''}`}
           onClick={() => { sounds.playClick(); setActiveMarketPage('militer'); }}
         >
-          <Swords size={17} />
-          <span>4. Jual Beli Militer</span>
+          <div className="mtb-icon-box">
+            <Swords size={18} />
+          </div>
+          <div className="mtb-label-col">
+            <span className="mtb-title">4. Jual Beli Militer</span>
+            <span className="mtb-sub">Alutsista, Tank, Jet & Rudal</span>
+          </div>
         </button>
       </div>
 
       {/* ==================== HALAMAN 1: PERBEKALAN & SUPLEMEN ==================== */}
       {activeMarketPage === 'perbekalan' && (
         <div className="market-page-section">
-          <div className="mps-header">
-            <h3 className="mps-title"><ShoppingBag size={20} className="text-gold" /> Logistik, Suplemen & Aset Kenegaraan</h3>
-            <p className="mps-sub">Dapatkan makanan penambah stamina, perlengkapan intelijen, lisensi usaha, dan konversi devisa batangan emas.</p>
+          <div className="mps-header banner-gold">
+            <div className="mps-icon-badge">
+              <ShoppingBag size={22} />
+            </div>
+            <div className="mps-text-block">
+              <h3 className="mps-title">Katalog Suplemen Energi & Instrumen Negara</h3>
+              <p className="mps-sub">Dapatkan asupan nutrisi cepat pulihkan stamina kerja, perlengkapan intelijen negara, lisensi pertambangan, dan emas murni.</p>
+            </div>
           </div>
 
           <div className="shop-items-grid">
@@ -308,9 +405,14 @@ export default function ShopView({ initialSubPage }) {
       {/* ==================== HALAMAN 2: BELI SUMBER DAYA ALAM ==================== */}
       {activeMarketPage === 'komoditas_beli' && (
         <div className="market-page-section">
-          <div className="mps-header">
-            <h3 className="mps-title"><Boxes size={20} className="text-cyan" /> Pengadaan & Pembelian Sumber Daya Alam</h3>
-            <p className="mps-sub">Beli bahan baku strategis (Minyak Mentah, Nikel, CPO, Batubara, Emas, Beras) langsung dari bursa komoditas nasional.</p>
+          <div className="mps-header banner-cyan">
+            <div className="mps-icon-badge">
+              <Boxes size={22} />
+            </div>
+            <div className="mps-text-block">
+              <h3 className="mps-title">Bursa Pembelian Sumber Daya & Komoditas Strategis</h3>
+              <p className="mps-sub">Pengadaan bahan baku industri (Minyak Mentah, Nikel HPAL, CPO Sawit, Batubara, Emas Murni & Beras) langsung dari bursa komoditas nasional.</p>
+            </div>
           </div>
 
           <div className="shop-items-grid">
@@ -388,9 +490,14 @@ export default function ShopView({ initialSubPage }) {
       {/* ==================== HALAMAN 3: JUAL SUMBER DAYA ALAM ==================== */}
       {activeMarketPage === 'komoditas_jual' && (
         <div className="market-page-section">
-          <div className="mps-header">
-            <h3 className="mps-title"><DollarSign size={20} className="text-emerald" /> Penjualan Hasil Tambang & Komoditas</h3>
-            <p className="mps-sub">Jual stok hasil kerja pabrik dan tambang Anda ke pasar terbuka untuk mencairkan keuntungan kas Rupiah instan.</p>
+          <div className="mps-header banner-emerald">
+            <div className="mps-icon-badge">
+              <DollarSign size={22} />
+            </div>
+            <div className="mps-text-block">
+              <h3 className="mps-title">Sentra Penjualan & Likuidasi Hasil Tambang Rakyat</h3>
+              <p className="mps-sub">Jual stok cadangan hasil kerja pabrik dan tambang Anda ke pasar terbuka untuk mencairkan keuntungan kas Rupiah instan.</p>
+            </div>
           </div>
 
           <div className="shop-items-grid">
@@ -493,9 +600,14 @@ export default function ShopView({ initialSubPage }) {
       {/* ==================== HALAMAN 4: JUAL BELI MILITER ==================== */}
       {activeMarketPage === 'militer' && (
         <div className="market-page-section">
-          <div className="mps-header">
-            <h3 className="mps-title"><Swords size={20} className="text-crimson" /> Pengadaan & Penjualan Alutsista Militer</h3>
-            <p className="mps-sub">Beli batalyon infantri, tank Leopard, jet tempur, kapal perang frigat, dan rudal taktis untuk pertahanan front perang regional.</p>
+          <div className="mps-header banner-crimson">
+            <div className="mps-icon-badge">
+              <Swords size={22} />
+            </div>
+            <div className="mps-text-block">
+              <h3 className="mps-title">Pabrik Pertahanan & Alutsista Angkatan Bersenjata</h3>
+              <p className="mps-sub">Pengadaan dan peremajaan unit tempur: Infantri Raider, Kavaleri MBT, Jet Tempur Rafale, Frigat Siluman, dan Rudal Taktis.</p>
+            </div>
           </div>
 
           <div className="shop-items-grid">

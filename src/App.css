@@ -11972,7 +11972,13 @@ input:checked + .toggle-slider:before {
 
 /* Military Unit Cards */
 .military-shop-card {
-  border-color: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.25);
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.75), rgba(15, 23, 42, 0.85));
+}
+
+.military-shop-card:hover {
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 10px 28px rgba(239, 68, 68, 0.18);
 }
 
 .mil-stat-badge-row {
@@ -11980,9 +11986,10 @@ input:checked + .toggle-slider:before {
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 12px;
-  padding: 6px 10px;
-  background: rgba(0, 0, 0, 0.25);
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.35);
   border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .msb-item {
@@ -12006,6 +12013,349 @@ input:checked + .toggle-slider:before {
   background: rgba(16, 185, 129, 0.15) !important;
   border-color: rgba(16, 185, 129, 0.35) !important;
 }
+
+/* ==================== ULTRA-MODERN MARKET POLISH ==================== */
+
+/* Hero Themes */
+.shop-hero-card.theme-gold {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(245, 158, 11, 0.12), rgba(15, 23, 42, 0.9));
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 8px 32px rgba(245, 158, 11, 0.12);
+}
+
+.shop-hero-card.theme-cyan {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(6, 182, 212, 0.12), rgba(15, 23, 42, 0.9));
+  border: 1px solid rgba(6, 182, 212, 0.35);
+  box-shadow: 0 8px 32px rgba(6, 182, 212, 0.12);
+}
+
+.shop-hero-card.theme-emerald {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(16, 185, 129, 0.12), rgba(15, 23, 42, 0.9));
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.12);
+}
+
+.shop-hero-card.theme-crimson {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(239, 68, 68, 0.12), rgba(15, 23, 42, 0.9));
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.12);
+}
+
+.sh-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.sh-quick-pulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.live-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulse-dot 1.8s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.sh-quick-metrics {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sqm-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+}
+
+.sqm-k {
+  color: #94a3b8;
+}
+
+.sqm-v {
+  color: #f8fafc;
+  font-weight: 700;
+}
+
+/* Glass Panel Premium */
+.glass-panel-premium {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+}
+
+.sbb-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sbb-status-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
+}
+
+.sbb-stat-item {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+}
+
+.sbb-stat-item:hover {
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.sbb-item-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.sbb-energy-percent {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #38bdf8;
+}
+
+.sbb-number {
+  font-size: 0.95rem;
+  font-family: monospace;
+}
+
+/* 4-Column Navigation Tab Cards */
+.market-main-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.market-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.market-tab-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: transparent;
+  transition: all 0.25s ease;
+}
+
+.mtb-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.25s ease;
+}
+
+.mtb-label-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mtb-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  letter-spacing: -0.01em;
+}
+
+.mtb-sub {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tab Colors Active States */
+.market-tab-btn.btn-tab-perbekalan.active {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(15, 23, 42, 0.85));
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.18);
+}
+.market-tab-btn.btn-tab-perbekalan.active::before { background: #f59e0b; }
+.market-tab-btn.btn-tab-perbekalan.active .mtb-icon-box { background: rgba(245, 158, 11, 0.25); color: #fbbf24; border-color: #f59e0b; }
+
+.market-tab-btn.btn-tab-resources.active {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(15, 23, 42, 0.85));
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 4px 18px rgba(56, 189, 248, 0.18);
+}
+.market-tab-btn.btn-tab-resources.active::before { background: #38bdf8; }
+.market-tab-btn.btn-tab-resources.active .mtb-icon-box { background: rgba(56, 189, 248, 0.25); color: #38bdf8; border-color: #38bdf8; }
+
+.market-tab-btn.btn-tab-sell.active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(15, 23, 42, 0.85));
+  border-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.18);
+}
+.market-tab-btn.btn-tab-sell.active::before { background: #10b981; }
+.market-tab-btn.btn-tab-sell.active .mtb-icon-box { background: rgba(16, 185, 129, 0.25); color: #34d399; border-color: #10b981; }
+
+.market-tab-btn.btn-tab-military.active {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.22), rgba(15, 23, 42, 0.85));
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow: 0 4px 18px rgba(239, 68, 68, 0.18);
+}
+.market-tab-btn.btn-tab-military.active::before { background: #ef4444; }
+.market-tab-btn.btn-tab-military.active .mtb-icon-box { background: rgba(239, 68, 68, 0.25); color: #f87171; border-color: #ef4444; }
+
+.market-tab-btn:hover:not(.active) {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(255, 255, 255, 0.16);
+  transform: translateY(-2px);
+}
+
+/* Beautiful Banner Headers */
+.mps-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mps-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mps-text-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.banner-gold {
+  border-left: 4px solid #f59e0b;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.12), rgba(15, 23, 42, 0.6));
+}
+.banner-gold .mps-icon-badge {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.banner-cyan {
+  border-left: 4px solid #38bdf8;
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.12), rgba(15, 23, 42, 0.6));
+}
+.banner-cyan .mps-icon-badge {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.banner-emerald {
+  border-left: 4px solid #10b981;
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.12), rgba(15, 23, 42, 0.6));
+}
+.banner-emerald .mps-icon-badge {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.banner-crimson {
+  border-left: 4px solid #ef4444;
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.12), rgba(15, 23, 42, 0.6));
+}
+.banner-crimson .mps-icon-badge {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+/* Card Enhancements */
+.shop-item-card {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  border-radius: 14px;
+}
+
+.trade-card-buy {
+  border-color: rgba(56, 189, 248, 0.2);
+}
+.trade-card-buy:hover {
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 8px 24px rgba(56, 189, 248, 0.15);
+}
+
+.trade-card-sell {
+  border-color: rgba(16, 185, 129, 0.2);
+}
+.trade-card-sell:hover {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15);
+}
+
 
 
 
