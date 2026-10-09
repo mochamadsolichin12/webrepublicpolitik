@@ -196,10 +196,10 @@ export default function Sidebar() {
         },
         {
           id: 'shop',
-          label: 'Toko & Logistik',
-          subtitle: 'Suplemen, Tempur & Emas',
+          label: 'Pasar',
+          subtitle: 'Perbekalan, Tempur & Emas',
           icon: ShoppingBag,
-          badge: 'Toko',
+          badge: 'Pasar',
           badgeClass: 'badge-gold',
         },
         {

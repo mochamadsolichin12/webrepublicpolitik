@@ -70,7 +70,7 @@ export default function ShopView() {
         <div className="sh-left">
           <div className="sh-badge">
             <ShoppingBag size={16} />
-            <span>Toko Logistik & Lisensi Negara</span>
+            <span>Pasar Logistik & Lisensi Negara</span>
           </div>
           <h2 className="sh-title">Pasar Perlengkapan & Aset Strategis</h2>
           <p className="sh-desc">
