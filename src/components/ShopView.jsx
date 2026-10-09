@@ -58,7 +58,7 @@ const ICON_MAP = {
   Sparkles
 };
 
-export default function ShopView() {
+export default function ShopView({ initialSubPage }) {
   const { 
     player, 
     playerInventory, 
@@ -73,7 +73,44 @@ export default function ShopView() {
   // 2. 'komoditas_beli' -> Beli Sumber Daya Alam & Komoditas Nasional
   // 3. 'komoditas_jual' -> Jual Sumber Daya Alam Hasil Tambang/Industri
   // 4. 'militer'     -> Jual Beli Alutsista & Perlengkapan Tempur
-  const [activeMarketPage, setActiveMarketPage] = useState('perbekalan');
+  const getInitialPage = () => {
+    if (initialSubPage) return initialSubPage;
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash.replace('#', '');
+      if (['perbekalan', 'komoditas_beli', 'komoditas_jual', 'militer', 'sumberdaya', 'senjata'].includes(hash)) {
+        if (hash === 'sumberdaya') return 'komoditas_beli';
+        if (hash === 'senjata') return 'militer';
+        return hash;
+      }
+    }
+    return 'perbekalan';
+  };
+
+  const [activeMarketPage, setActiveMarketPage] = useState(getInitialPage);
+
+  // Sync state if initialSubPage prop changes or hash changes
+  React.useEffect(() => {
+    if (initialSubPage) {
+      setActiveMarketPage(initialSubPage);
+    }
+  }, [initialSubPage]);
+
+  React.useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'sumberdaya' || hash === 'komoditas_beli') {
+        setActiveMarketPage('komoditas_beli');
+      } else if (hash === 'senjata' || hash === 'militer') {
+        setActiveMarketPage('militer');
+      } else if (hash === 'perbekalan') {
+        setActiveMarketPage('perbekalan');
+      } else if (hash === 'komoditas_jual') {
+        setActiveMarketPage('komoditas_jual');
+      }
+    };
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
   
   // State for Commodity Trading
   const [tradeQuantities, setTradeQuantities] = useState({});

@@ -145,7 +145,9 @@ function MainApp() {
             {activeTab === 'economy' && <RealisticEconomyView />}
             {activeTab === 'jobs' && <JobsWorkView />}
             {activeTab === 'settings' && <SettingsView />}
-            {activeTab === 'shop' && <ShopView />}
+            {activeTab === 'shop' && <ShopView initialSubPage="perbekalan" />}
+            {activeTab === 'market-resources' && <ShopView initialSubPage="komoditas_beli" />}
+            {activeTab === 'market-military' && <ShopView initialSubPage="militer" />}
           </Suspense>
         </main>
       </div>

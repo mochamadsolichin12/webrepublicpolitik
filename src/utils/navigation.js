@@ -23,6 +23,8 @@ export const TAB_HTML_MAP = {
   jobs: '/jobs.html',
   settings: '/settings.html',
   shop: '/shop.html',
+  'market-resources': '/shop.html#sumberdaya',
+  'market-military': '/shop.html#senjata',
 };
 
 export const getPageUrl = (tabId) => {
@@ -59,14 +61,18 @@ export const navigateToPage = (tabId, setActiveTab) => {
   }
   if (typeof window === 'undefined') return;
 
-  const targetPath = getPageUrl(tabId);
+  const targetUrl = getPageUrl(tabId);
+  const targetPathOnly = targetUrl.split('#')[0];
+  const targetHash = targetUrl.includes('#') ? targetUrl.split('#')[1] : '';
   const currentPath = window.location.pathname;
 
   const isAlreadyOnPage = 
     (tabId === 'home' && (currentPath === '/' || currentPath.endsWith('/index.html'))) ||
-    currentPath.endsWith(targetPath);
+    currentPath.endsWith(targetPathOnly);
 
   if (!isAlreadyOnPage) {
-    window.location.href = targetPath;
+    window.location.href = targetUrl;
+  } else if (targetHash) {
+    window.location.hash = targetHash;
   }
 };

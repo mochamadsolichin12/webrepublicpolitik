@@ -33,7 +33,8 @@ import {
   Pickaxe,
   Settings,
   FileText,
-  ShoppingBag
+  ShoppingBag,
+  Boxes
 } from 'lucide-react';
 
 // Definition of all categories & items in the sidebar
@@ -175,10 +176,26 @@ const SIDEBAR_CATEGORIES = [
       {
         id: 'shop',
         label: 'Pasar Lokal',
-        subtitle: 'Suplemen, Sumber Daya & Militer',
+        subtitle: 'Suplemen & Logistik Warga',
         icon: ShoppingBag,
         badge: 'Pasar',
         badgeClass: 'badge-gold',
+      },
+      {
+        id: 'market-resources',
+        label: 'Bursa Sumber Daya',
+        subtitle: 'Jual Beli Komoditas & Tambang',
+        icon: Boxes,
+        badge: 'SDA',
+        badgeClass: 'badge-emerald',
+      },
+      {
+        id: 'market-military',
+        label: 'Pasar Senjata & Militer',
+        subtitle: 'Pengadaan Senjata & Alutsista',
+        icon: Swords,
+        badge: 'Tempur',
+        badgeClass: 'badge-purple',
       },
     ],
   },
