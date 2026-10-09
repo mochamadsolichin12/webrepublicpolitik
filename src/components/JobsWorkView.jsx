@@ -131,7 +131,7 @@ export default function JobsWorkView() {
           </div>
           <div className="wsc-bottom">
             <span>Pangkat: <strong>Lv.{player?.level || 1}</strong></span>
-            <span>Bonus Koneksi: <strong className="font-emerald">+{((player?.perks?.connections || 10) * 2)}% Upah</strong></span>
+            <span>Bonus Daya Tahan: <strong className="font-emerald">+{((player?.perks?.connections || 10) * 2)}% Upah</strong></span>
           </div>
         </div>
       </div>

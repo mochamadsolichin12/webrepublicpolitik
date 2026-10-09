@@ -1076,9 +1076,9 @@ export function GameProvider({ children, defaultTab }) {
     });
 
     const perkTitles = {
-      intellect: 'Intelektualitas & Regulasi',
-      endurance: 'Ketahanan & Disiplin',
-      connections: 'Koneksi Bisnis & Oligarki',
+      intellect: 'Kekuatan',
+      endurance: 'Edukasi',
+      connections: 'Daya Tahan',
     };
 
     const now = Date.now();
@@ -1445,7 +1445,7 @@ export function GameProvider({ children, defaultTab }) {
     }
     const requiredIntellect = 15;
     if ((player.perks?.intellect || 10) < requiredIntellect) {
-      showToast(`Intelektual belum memadai! Butuh stat Intelektual minimal ${requiredIntellect} untuk merancang RUU.`, 'error');
+      showToast(`Kekuatan pengaruh belum memadai! Butuh stat Kekuatan minimal ${requiredIntellect} untuk merancang RUU.`, 'error');
       return;
     }
     const draftingCost = 20000000;

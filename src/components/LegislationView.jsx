@@ -100,7 +100,7 @@ export default function LegislationView() {
     }
 
     if ((player.perks?.intellect || 10) < requiredIntellect) {
-      showToast(`Stat Intelektual Anda (${player.perks?.intellect || 10}) belum mencukupi. Butuh minimal Intelektual ${requiredIntellect}. Latihlah di Profil atau Markas Karir.`, 'error');
+      showToast(`Stat Kekuatan Anda (${player.perks?.intellect || 10}) belum mencukupi. Butuh minimal Kekuatan ${requiredIntellect} untuk merancang RUU. Latihlah di Profil atau Markas Karir.`, 'error');
       return;
     }
 
@@ -162,7 +162,7 @@ export default function LegislationView() {
           </div>
           <div className="lcc-stats">
             <div className="lcc-stat-item">
-              <span className="csi-label">Stat Intelektual:</span>
+              <span className="csi-label">Stat Kekuatan:</span>
               <strong className={player.perks?.intellect >= requiredIntellect ? 'text-emerald' : 'text-crimson'}>
                 {player.perks?.intellect || 10} / {requiredIntellect}
               </strong>
