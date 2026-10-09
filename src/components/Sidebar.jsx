@@ -275,14 +275,28 @@ export default function Sidebar() {
     switchActiveRole
   } = useGame();
 
-  // Categories are all visible by default
-  const [collapsedCategories, setCollapsedCategories] = useState({
-    geopolitics: false,
-    governance: false,
-    politics: false,
-    marketplace: false,
-    system: false,
-    admin: false,
+  // Inisialisasi: Semua kategori tertutup secara default (hanya terbuka jika kategori memuat tab aktif atau jika diklik)
+  const [collapsedCategories, setCollapsedCategories] = useState(() => {
+    // Cari kategori yang memuat tab aktif saat ini agar tab aktif tetap terlihat
+    const activeCat = SIDEBAR_CATEGORIES.find((cat) =>
+      cat.items.some((item) => item.id === activeTab)
+    );
+
+    const initial = {
+      geopolitics: true,
+      governance: true,
+      politics: true,
+      marketplace: true,
+      system: true,
+      authority: true,
+    };
+
+    // Buka hanya kategori dari tab yang sedang aktif
+    if (activeCat && activeCat.id) {
+      initial[activeCat.id] = false;
+    }
+
+    return initial;
   });
 
   const toggleCategory = (catId) => {
@@ -366,7 +380,12 @@ export default function Sidebar() {
                 {/* Category Header */}
                 <div 
                   className="sidebar-category-header"
-                  onClick={() => sidebarOpen && toggleCategory(category.id)}
+                  onClick={() => {
+                    if (!sidebarOpen) {
+                      setSidebarOpen(true);
+                    }
+                    toggleCategory(category.id);
+                  }}
                   title={category.title}
                 >
                   <div className="cat-title-left">
