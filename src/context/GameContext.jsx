@@ -2260,7 +2260,67 @@ export function GameProvider({ children, defaultTab }) {
     return true;
   };
 
-  // 15. Authentication Methods (Pure Database-Driven Role & Identity)
+  // 15. Military Unit Trading (Jual Beli Senjata & Unit Tempur)
+  const tradeMilitaryUnit = (unitId, action = 'buy', quantity = 1) => {
+    sounds.playClick();
+    if (!player) {
+      showToast('Silakan masuk / login terlebih dahulu.', 'error');
+      return false;
+    }
+    const unit = MILITARY_UNITS.find((u) => u.id === unitId);
+    if (!unit) return false;
+
+    const unitPrice = unit.moneyCost;
+    const totalCost = unitPrice * quantity;
+    const currentOwned = playerInventory[unitId] || 0;
+
+    if (action === 'buy') {
+      if ((player.money || 0) < totalCost) {
+        showToast(`Kas tidak cukup! Butuh Rp ${(totalCost / 1e6).toFixed(1)} Juta untuk membeli ${quantity}x ${unit.name}.`, 'error');
+        return false;
+      }
+
+      setPlayer((prev) => (prev ? {
+        ...prev,
+        money: (prev.money || 0) - totalCost,
+        exp: (prev.exp || 0) + Math.round(quantity * 25)
+      } : prev));
+
+      setPlayerInventory((prev) => ({
+        ...prev,
+        [unitId]: (prev[unitId] || 0) + quantity
+      }));
+
+      sounds.playCoin();
+      showToast(`Sukses Membeli Militer: +${quantity}x ${unit.name} (Total Rp ${(totalCost / 1e6).toFixed(1)} Juta).`, 'success');
+      return true;
+    } else {
+      // Jual unit militer (harga jual 75% dari harga beli)
+      if (currentOwned < quantity) {
+        showToast(`Unit tidak mencukupi! Anda hanya memiliki ${currentOwned}x ${unit.name}.`, 'error');
+        return false;
+      }
+
+      const sellProceeds = Math.round(totalCost * 0.75);
+
+      setPlayer((prev) => (prev ? {
+        ...prev,
+        money: (prev.money || 0) + sellProceeds,
+        exp: (prev.exp || 0) + Math.round(quantity * 10)
+      } : prev));
+
+      setPlayerInventory((prev) => ({
+        ...prev,
+        [unitId]: Math.max(0, (prev[unitId] || 0) - quantity)
+      }));
+
+      sounds.playCoin();
+      showToast(`Sukses Menjual Militer: ${quantity}x ${unit.name} dan menerima Rp ${(sellProceeds / 1e6).toFixed(1)} Juta!`, 'success');
+      return true;
+    }
+  };
+
+  // 16. Authentication Methods (Pure Database-Driven Role & Identity)
   const login = async (identifier, password) => {
     sounds.playClick();
     if (!identifier) {
@@ -2891,6 +2951,7 @@ export function GameProvider({ children, defaultTab }) {
         updatePlayerProfile,
         boostEnergy,
         buyShopItem,
+        tradeMilitaryUnit,
         workMine,
         campaignInRegion,
         investInRegion,

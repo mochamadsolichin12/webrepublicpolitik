@@ -174,10 +174,10 @@ const SIDEBAR_CATEGORIES = [
     items: [
       {
         id: 'shop',
-        label: 'Pasar Nasional',
-        subtitle: 'Suplemen, Tempur & Emas',
+        label: 'Pasar Lokal',
+        subtitle: 'Suplemen, Sumber Daya & Militer',
         icon: ShoppingBag,
-        badge: 'Toko',
+        badge: 'Pasar',
         badgeClass: 'badge-gold',
       },
     ],

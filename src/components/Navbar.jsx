@@ -72,7 +72,7 @@ export default function Navbar() {
     { id: 'elections', label: 'Pemilu & Pilpres', icon: Vote, badge: 'Aktif' },
     { id: 'parties', label: 'Partai Politik', icon: Flag, badge: null },
     { id: 'career', label: 'Karir & Markas', icon: Briefcase, badge: `Lv.${player?.level || 1}` },
-    { id: 'shop', label: 'Pasar', icon: ShoppingBag, badge: 'Pasar' },
+    { id: 'shop', label: 'Pasar Lokal', icon: ShoppingBag, badge: 'Pasar' },
     { id: 'media', label: 'Koran Nasional', icon: Newspaper, badge: null },
     { id: 'budget', label: 'Kas Negara & APBN', icon: Coins, badge: null },
     ...(isSuperAdmin ? [{ id: 'database', label: 'Database SQL', icon: Database, badge: 'MySQL' }] : []),
