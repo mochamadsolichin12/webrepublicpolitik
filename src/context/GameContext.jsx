@@ -615,7 +615,19 @@ export function GameProvider({ children, defaultTab }) {
   const [activePerkUpgrade, setActivePerkUpgrade] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY + '_active_perk_upgrade');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && (parsed.endTime || parsed.remainingSeconds !== undefined)) {
+          const now = Date.now();
+          const targetEndTime = parsed.endTime || (parsed.startedAt ? parsed.startedAt + parsed.totalDurationSeconds * 1000 : now + (parsed.remainingSeconds || 60) * 1000);
+          const remaining = Math.max(0, Math.ceil((targetEndTime - now) / 1000));
+          return {
+            ...parsed,
+            endTime: targetEndTime,
+            remainingSeconds: remaining
+          };
+        }
+      }
     } catch {
       // ignore
     }
@@ -957,10 +969,22 @@ export function GameProvider({ children, defaultTab }) {
           };
         });
       });
-      // 6. Perk Training / Upgrade Countdown & Auto-completion
+    }, 2500);
+
+    return () => clearInterval(timer);
+  }, [passedLaws, showToast]);
+
+  // Dedicated 1-Second Real-Time Countdown for Active Perk Upgrade
+  useEffect(() => {
+    if (!activePerkUpgrade) return;
+
+    const perkInterval = setInterval(() => {
       setActivePerkUpgrade((currentUpgrade) => {
         if (!currentUpgrade) return null;
-        const remaining = Math.max(0, currentUpgrade.remainingSeconds - 2.5);
+        const now = Date.now();
+        const endTime = currentUpgrade.endTime || (currentUpgrade.startedAt ? currentUpgrade.startedAt + currentUpgrade.totalDurationSeconds * 1000 : now);
+        const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
+
         if (remaining <= 0) {
           // Training selesai! Tingkatkan stat perk (maksimal 999)
           const { perkKey, targetVal } = currentUpgrade;
@@ -997,13 +1021,14 @@ export function GameProvider({ children, defaultTab }) {
 
         return {
           ...currentUpgrade,
+          endTime,
           remainingSeconds: remaining,
         };
       });
-    }, 2500);
+    }, 1000);
 
-    return () => clearInterval(timer);
-  }, [passedLaws, showToast]);
+    return () => clearInterval(perkInterval);
+  }, [activePerkUpgrade?.startedAt, activePerkUpgrade?.endTime, showToast]);
 
   // Actions:
   // 1. Train Perk (Charisma & Retorika tidak dapat dilatih manual; otomatis naik/turun dari ketenaran & pemilu presiden)
@@ -1056,6 +1081,7 @@ export function GameProvider({ children, defaultTab }) {
       connections: 'Koneksi Bisnis & Oligarki',
     };
 
+    const now = Date.now();
     setActivePerkUpgrade({
       perkKey,
       perkTitle: perkTitles[perkKey] || perkKey.toUpperCase(),
@@ -1063,7 +1089,8 @@ export function GameProvider({ children, defaultTab }) {
       targetVal,
       totalDurationSeconds: durationSeconds,
       remainingSeconds: durationSeconds,
-      startedAt: Date.now(),
+      startedAt: now,
+      endTime: now + durationSeconds * 1000,
     });
 
     sounds.playCoin();

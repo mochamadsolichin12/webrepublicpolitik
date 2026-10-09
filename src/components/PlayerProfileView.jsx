@@ -428,7 +428,11 @@ export default function PlayerProfileView() {
                   <div className="perk-upgrading-progress-box">
                     <div className="pup-header">
                       <span><Loader2 size={13} className="spin-fast" /> Sedang Ditingkatkan</span>
-                      <strong>{Math.ceil(activePerkUpgrade.remainingSeconds)}s</strong>
+                      <strong>
+                        {activePerkUpgrade.remainingSeconds >= 60 
+                          ? `${Math.floor(activePerkUpgrade.remainingSeconds / 60)}m ${activePerkUpgrade.remainingSeconds % 60}s`
+                          : `${activePerkUpgrade.remainingSeconds}s`}
+                      </strong>
                     </div>
                     <div className="pup-track">
                       <div 
