@@ -301,10 +301,31 @@ export default function Sidebar() {
 
   const toggleCategory = (catId) => {
     sounds.playClick();
-    setCollapsedCategories((prev) => ({
-      ...prev,
-      [catId]: !prev[catId]
-    }));
+    setCollapsedCategories((prev) => {
+      const isCurrentlyOpen = !prev[catId];
+      // Jika saat ini terbuka, klik akan menutupnya (semua tertutup)
+      if (isCurrentlyOpen) {
+        return {
+          geopolitics: true,
+          governance: true,
+          politics: true,
+          marketplace: true,
+          system: true,
+          authority: true,
+          [catId]: true,
+        };
+      }
+      // Jika saat ini tertutup, tutup SEMUA kategori lain dan hanya buka kategori yang diklik
+      return {
+        geopolitics: true,
+        governance: true,
+        politics: true,
+        marketplace: true,
+        system: true,
+        authority: true,
+        [catId]: false, // Hanya buka panel ini
+      };
+    });
   };
 
   const playerParty = parties.find((p) => p.id === player?.partyId);
