@@ -75,7 +75,7 @@ export default function Navbar() {
     { id: 'shop', label: 'Pasar', icon: ShoppingBag, badge: 'Pasar' },
     { id: 'media', label: 'Koran Nasional', icon: Newspaper, badge: null },
     { id: 'budget', label: 'Kas Negara & APBN', icon: Coins, badge: null },
-    { id: 'database', label: 'Database SQL', icon: Database, badge: 'MySQL' },
+    ...(isSuperAdmin ? [{ id: 'database', label: 'Database SQL', icon: Database, badge: 'MySQL' }] : []),
   ];
 
   return (

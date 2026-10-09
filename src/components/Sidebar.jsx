@@ -324,6 +324,9 @@ export default function Sidebar() {
         {/* Sidebar Scrollable Body */}
         <div className="sidebar-content-scroll">
           {SIDEBAR_CATEGORIES.filter((category) => {
+            if (category.id === 'system') {
+              return isSuperAdmin;
+            }
             if (category.id === 'authority') {
               return isSuperAdmin || isModerator;
             }
