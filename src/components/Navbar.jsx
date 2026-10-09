@@ -25,7 +25,8 @@ import {
   Swords,
   Settings,
   Home,
-  ArrowLeft
+  ArrowLeft,
+  ShoppingBag
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -71,6 +72,7 @@ export default function Navbar() {
     { id: 'elections', label: 'Pemilu & Pilpres', icon: Vote, badge: 'Aktif' },
     { id: 'parties', label: 'Partai Politik', icon: Flag, badge: null },
     { id: 'career', label: 'Karir & Markas', icon: Briefcase, badge: `Lv.${player?.level || 1}` },
+    { id: 'shop', label: 'Toko & Logistik', icon: ShoppingBag, badge: 'Toko' },
     { id: 'media', label: 'Koran Nasional', icon: Newspaper, badge: null },
     { id: 'budget', label: 'Kas Negara & APBN', icon: Coins, badge: null },
     { id: 'database', label: 'Database SQL', icon: Database, badge: 'MySQL' },

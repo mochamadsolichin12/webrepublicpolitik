@@ -25,6 +25,7 @@ const LegislationView = lazy(() => import('./components/LegislationView'));
 const RealisticEconomyView = lazy(() => import('./components/RealisticEconomyView'));
 const JobsWorkView = lazy(() => import('./components/JobsWorkView'));
 const SettingsView = lazy(() => import('./components/SettingsView'));
+const ShopView = lazy(() => import('./components/ShopView'));
 import AuthModal from './components/AuthModal';
 
 class ErrorBoundary extends React.Component {
@@ -144,6 +145,7 @@ function MainApp() {
             {activeTab === 'economy' && <RealisticEconomyView />}
             {activeTab === 'jobs' && <JobsWorkView />}
             {activeTab === 'settings' && <SettingsView />}
+            {activeTab === 'shop' && <ShopView />}
           </Suspense>
         </main>
       </div>

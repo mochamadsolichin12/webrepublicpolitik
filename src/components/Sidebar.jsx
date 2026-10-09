@@ -32,7 +32,8 @@ import {
   TrendingUp,
   Pickaxe,
   Settings,
-  FileText
+  FileText,
+  ShoppingBag
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -192,6 +193,14 @@ export default function Sidebar() {
           icon: Pickaxe,
           badge: 'Kerja',
           badgeClass: 'badge-emerald',
+        },
+        {
+          id: 'shop',
+          label: 'Toko & Logistik',
+          subtitle: 'Suplemen, Tempur & Emas',
+          icon: ShoppingBag,
+          badge: 'Toko',
+          badgeClass: 'badge-gold',
         },
         {
           id: 'media',

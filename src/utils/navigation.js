@@ -22,6 +22,7 @@ export const TAB_HTML_MAP = {
   economy: '/economy.html',
   jobs: '/jobs.html',
   settings: '/settings.html',
+  shop: '/shop.html',
 };
 
 export const getPageUrl = (tabId) => {
@@ -31,6 +32,7 @@ export const getPageUrl = (tabId) => {
 export const getCurrentPageTab = () => {
   if (typeof window === 'undefined') return 'home';
   const path = window.location.pathname.toLowerCase();
+  if (path.includes('shop')) return 'shop';
   if (path.includes('settings')) return 'settings';
   if (path.includes('jobs')) return 'jobs';
   if (path.includes('economy')) return 'economy';

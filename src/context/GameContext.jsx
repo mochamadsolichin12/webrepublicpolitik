@@ -2198,7 +2198,69 @@ export function GameProvider({ children, defaultTab }) {
     showToast(`Hasil Panen/Produksi Industri Diambil: +Rp ${(profitRp / 1e6).toFixed(1)} Juta Kas & +${yieldQty}x ${facTemplate.resourceProduced.toUpperCase()}!`, 'success');
   };
 
-  // 14. Authentication Methods (Pure Database-Driven Role & Identity)
+  // 14. Shop Item Purchase Handler
+  const buyShopItem = (item) => {
+    sounds.playClick();
+    if (!player) {
+      showToast('Silakan masuk / login terlebih dahulu untuk berbelanja.', 'error');
+      return false;
+    }
+    if (!item) return false;
+
+    const priceRp = Number(item.priceRp) || 0;
+    const priceGold = Number(item.priceGold) || 0;
+
+    if ((player.money || 0) < priceRp) {
+      showToast(`Uang tunai tidak cukup! Butuh Rp ${(priceRp / 1e6).toFixed(1)} Juta.`, 'error');
+      return false;
+    }
+
+    if ((player.gold || 0) < priceGold) {
+      showToast(`Batangan emas devisa tidak cukup! Butuh ${priceGold} Emas.`, 'error');
+      return false;
+    }
+
+    // Process effects
+    setPlayer((prev) => {
+      if (!prev) return prev;
+      let newEnergy = prev.energy || 0;
+      let newGold = (prev.gold || 0) - priceGold;
+      let newMoney = (prev.money || 0) - priceRp;
+      let newExp = prev.exp || 0;
+
+      if (item.type === 'energy') {
+        newEnergy = Math.min(prev.maxEnergy || 100, newEnergy + (item.effectAmount || 25));
+      } else if (item.type === 'max_energy') {
+        newEnergy = prev.maxEnergy || 100;
+      } else if (item.type === 'buy_gold') {
+        newGold += (item.yieldGold || 1);
+      } else if (item.type === 'prestige_asset') {
+        newExp += 500;
+      }
+
+      return {
+        ...prev,
+        energy: newEnergy,
+        gold: newGold,
+        money: newMoney,
+        exp: newExp,
+      };
+    });
+
+    // Save into inventory if it's an equipment, boost, or privilege
+    if (['military', 'privileges', 'prestige'].includes(item.category)) {
+      setPlayerInventory((prev) => ({
+        ...prev,
+        [item.id]: (prev[item.id] || 0) + 1
+      }));
+    }
+
+    sounds.playCoin();
+    showToast(`Sukses membeli ${item.name}! ${item.effectText || ''}`, 'success');
+    return true;
+  };
+
+  // 15. Authentication Methods (Pure Database-Driven Role & Identity)
   const login = async (identifier, password) => {
     sounds.playClick();
     if (!identifier) {
@@ -2828,6 +2890,7 @@ export function GameProvider({ children, defaultTab }) {
         trainPerk,
         updatePlayerProfile,
         boostEnergy,
+        buyShopItem,
         workMine,
         campaignInRegion,
         investInRegion,
