@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { sounds } from '../utils/soundEffects';
 import { navigateToPage } from '../utils/navigation';
@@ -36,13 +36,209 @@ import {
   ShoppingBag
 } from 'lucide-react';
 
+// Definition of all categories & items in the sidebar
+const SIDEBAR_CATEGORIES = [
+  {
+    id: 'geopolitics',
+    title: 'GEOPOLITIK & WILAYAH',
+    icon: Globe,
+    color: '#38bdf8',
+    items: [
+      {
+        id: 'home',
+        label: 'Beranda Republik',
+        subtitle: 'Status Wilayah, Chat & Perang',
+        icon: Compass,
+        badge: 'Utama',
+        badgeClass: 'badge-gold',
+      },
+      {
+        id: 'map',
+        label: 'Peta Dunia & NKRI',
+        subtitle: '38 Provinsi & 177 Negara',
+        icon: Globe,
+        badge: 'Rival Regions',
+        badgeClass: 'badge-cyan',
+      },
+      {
+        id: 'wars',
+        label: 'Perang & Wilayah',
+        subtitle: 'Front Tempur & Sengketa',
+        icon: Swords,
+        badge: 'Tempur',
+        badgeClass: 'badge-crimson',
+      },
+    ],
+  },
+  {
+    id: 'governance',
+    title: 'LEGISLATIF & KENEGARAAN',
+    icon: Landmark,
+    color: '#fbbf24',
+    items: [
+      {
+        id: 'parliament',
+        label: 'Parlemen',
+        subtitle: 'Sidang Paripurna & RUU',
+        icon: Landmark,
+        badge: 'Sidang',
+        badgeClass: 'badge-gold',
+      },
+      {
+        id: 'legislation',
+        label: 'Pengajuan Hukum',
+        subtitle: 'Naskah Akademik & RUU',
+        icon: Scale,
+        badge: 'Legislasi',
+        badgeClass: 'badge-gold',
+      },
+      {
+        id: 'elections',
+        label: 'Pemilu & Pilpres',
+        subtitle: 'Pemilihan Presiden & Wapres',
+        icon: Vote,
+        badge: 'Aktif',
+        badgeClass: 'badge-emerald',
+      },
+      {
+        id: 'budget',
+        label: 'Kas Negara & APBN',
+        subtitle: 'Alokasi Dana & Perbendaharaan',
+        icon: Coins,
+        badge: 'Triliun',
+        badgeClass: 'badge-gold',
+      },
+      {
+        id: 'economy',
+        label: 'Bursa & Ekonomi',
+        subtitle: 'Komoditas, Kurs & Hilirisasi',
+        icon: TrendingUp,
+        badge: 'Bursa',
+        badgeClass: 'badge-cyan',
+      },
+    ],
+  },
+  {
+    id: 'politics',
+    title: 'POLITIK & PERGERAKAN',
+    icon: Flag,
+    color: '#ec4899',
+    items: [
+      {
+        id: 'profile',
+        label: 'Profil Warga & KTP',
+        subtitle: 'KTP-el & Identitas Politik',
+        icon: User,
+        badge: 'E-KTP',
+        badgeClass: 'badge-gold',
+      },
+      {
+        id: 'parties',
+        label: 'Partai Politik',
+        subtitle: 'Fraksi DPR & Koalisi',
+        icon: Flag,
+        badge: null,
+        badgeClass: 'badge-purple',
+      },
+      {
+        id: 'career',
+        label: 'Karir & Markas',
+        subtitle: 'Skill, Latihan & Jabatan',
+        icon: Briefcase,
+        badge: null,
+        badgeClass: 'badge-blue',
+      },
+      {
+        id: 'jobs',
+        label: 'Bursa Kerja & Dinas',
+        subtitle: 'Shift Kerja & Gaji Sektor Riil',
+        icon: Pickaxe,
+        badge: 'Kerja',
+        badgeClass: 'badge-emerald',
+      },
+      {
+        id: 'shop',
+        label: 'Pasar',
+        subtitle: 'Perbekalan, Tempur & Emas',
+        icon: ShoppingBag,
+        badge: 'Pasar',
+        badgeClass: 'badge-gold',
+      },
+      {
+        id: 'media',
+        label: 'Koran & Media Pers',
+        subtitle: 'Jurnalisme & Opini Publik',
+        icon: Newspaper,
+        badge: 'Pers',
+        badgeClass: 'badge-cyan',
+      },
+    ],
+  },
+  {
+    id: 'system',
+    title: 'SISTEM & BASIS DATA',
+    icon: Database,
+    color: '#10b981',
+    items: [
+      {
+        id: 'database',
+        label: 'Database SQL Studio',
+        subtitle: '14 Tabel Relasional & Query',
+        icon: Database,
+        badge: 'MySQL',
+        badgeClass: 'badge-emerald',
+      },
+      {
+        id: 'settings',
+        label: 'Pengaturan Sistem',
+        subtitle: 'Audio, Tema & Cadangan',
+        icon: Settings,
+        badge: 'Setting',
+        badgeClass: 'badge-gold',
+      },
+    ],
+  },
+  {
+    id: 'authority',
+    title: 'OTORITAS & PANEL KENDALI',
+    icon: Crown,
+    color: '#ef4444',
+    items: [
+      {
+        id: 'admin',
+        label: 'Panel Super Admin',
+        subtitle: 'Komando & Otoritas Penuh',
+        icon: Crown,
+        badge: 'SUPER',
+        badgeClass: 'badge-gold',
+      },
+      {
+        id: 'admin-progress',
+        label: 'Progres Proyek (MD)',
+        subtitle: 'Log Fitur & Roadmap',
+        icon: FileText,
+        badge: 'ROADMAP',
+        badgeClass: 'badge-emerald',
+      },
+      {
+        id: 'moderator',
+        label: 'Panel Moderator',
+        subtitle: 'Veto RUU & Ketertiban',
+        icon: ShieldCheck,
+        badge: 'MOD',
+        badgeClass: 'badge-purple',
+      },
+    ],
+  },
+];
+
 export default function Sidebar() {
   const { 
     activeTab, 
     setActiveTab, 
     sidebarOpen, 
     toggleSidebar, 
-    setSidebarOpen,
+    setSidebarOpen, 
     player, 
     parties, 
     regions,
@@ -54,13 +250,13 @@ export default function Sidebar() {
     switchActiveRole
   } = useGame();
 
-  // Collapsible category state (geopolitics terbuka secara default agar Beranda Republik langsung terlihat)
+  // Categories are all visible by default
   const [collapsedCategories, setCollapsedCategories] = useState({
     geopolitics: false,
-    governance: true,
-    politics: true,
-    system: true,
-    admin: true,
+    governance: false,
+    politics: false,
+    system: false,
+    admin: false,
   });
 
   const toggleCategory = (catId) => {
@@ -74,201 +270,6 @@ export default function Sidebar() {
   const playerParty = parties.find((p) => p.id === player?.partyId);
   const playerRegionId = player?.currentRegionId || player?.residenceRegionId || 'dki';
   const playerRegion = regions.find((r) => r.id === playerRegionId) || regions[0];
-
-  const SIDEBAR_CATEGORIES = [
-    {
-      id: 'geopolitics',
-      title: 'GEOPOLITIK & WILAYAH',
-      icon: Globe,
-      color: '#38bdf8',
-      items: [
-        {
-          id: 'home',
-          label: 'Beranda Republik',
-          subtitle: 'Status Wilayah, Chat & Perang',
-          icon: Compass,
-          badge: 'Utama',
-          badgeClass: 'badge-gold',
-        },
-        {
-          id: 'map',
-          label: 'Peta Dunia & NKRI',
-          subtitle: '38 Provinsi & 177 Negara',
-          icon: Globe,
-          badge: 'Rival Regions',
-          badgeClass: 'badge-cyan',
-        },
-        {
-          id: 'wars',
-          label: 'Perang & Wilayah',
-          subtitle: 'Front Tempur & Sengketa',
-          icon: Swords,
-          badge: 'Tempur',
-          badgeClass: 'badge-crimson',
-        },
-      ],
-    },
-    {
-      id: 'governance',
-      title: 'LEGISLATIF & KENEGARAAN',
-      icon: Landmark,
-      color: '#fbbf24',
-      items: [
-        {
-          id: 'parliament',
-          label: 'Parlemen',
-          subtitle: 'Sidang Paripurna & RUU',
-          icon: Landmark,
-          badge: 'Sidang',
-          badgeClass: 'badge-gold',
-        },
-        {
-          id: 'legislation',
-          label: 'Pengajuan Hukum',
-          subtitle: 'Naskah Akademik & RUU',
-          icon: Scale,
-          badge: 'Legislasi',
-          badgeClass: 'badge-gold',
-        },
-        {
-          id: 'elections',
-          label: 'Pemilu & Pilpres',
-          subtitle: 'Pemilihan Presiden & Wapres',
-          icon: Vote,
-          badge: 'Aktif',
-          badgeClass: 'badge-emerald',
-        },
-        {
-          id: 'budget',
-          label: 'Kas Negara & APBN',
-          subtitle: 'Alokasi Dana & Perbendaharaan',
-          icon: Coins,
-          badge: 'Triliun',
-          badgeClass: 'badge-gold',
-        },
-        {
-          id: 'economy',
-          label: 'Bursa & Ekonomi',
-          subtitle: 'Komoditas, Kurs & Hilirisasi',
-          icon: TrendingUp,
-          badge: 'Pasar',
-          badgeClass: 'badge-cyan',
-        },
-      ],
-    },
-    {
-      id: 'politics',
-      title: 'POLITIK & PERGERAKAN',
-      icon: Flag,
-      color: '#ec4899',
-      items: [
-        {
-          id: 'profile',
-          label: 'Profil Warga & KTP',
-          subtitle: 'KTP-el & Identitas Politik',
-          icon: User,
-          badge: 'E-KTP',
-          badgeClass: 'badge-gold',
-        },
-        {
-          id: 'parties',
-          label: 'Partai Politik',
-          subtitle: 'Fraksi DPR & Koalisi',
-          icon: Flag,
-          badge: `${parties.length} Fraksi`,
-          badgeClass: 'badge-purple',
-        },
-        {
-          id: 'career',
-          label: 'Karir & Markas',
-          subtitle: 'Skill, Latihan & Jabatan',
-          icon: Briefcase,
-          badge: `Lv.${player?.level || 1}`,
-          badgeClass: 'badge-blue',
-        },
-        {
-          id: 'jobs',
-          label: 'Bursa Kerja & Dinas',
-          subtitle: 'Shift Kerja & Gaji Sektor Riil',
-          icon: Pickaxe,
-          badge: 'Kerja',
-          badgeClass: 'badge-emerald',
-        },
-        {
-          id: 'shop',
-          label: 'Pasar',
-          subtitle: 'Perbekalan, Tempur & Emas',
-          icon: ShoppingBag,
-          badge: 'Pasar',
-          badgeClass: 'badge-gold',
-        },
-        {
-          id: 'media',
-          label: 'Koran & Media Pers',
-          subtitle: 'Jurnalisme & Opini Publik',
-          icon: Newspaper,
-          badge: 'Pers',
-          badgeClass: 'badge-cyan',
-        },
-      ],
-    },
-    {
-      id: 'system',
-      title: 'SISTEM & BASIS DATA',
-      icon: Database,
-      color: '#10b981',
-      items: [
-        {
-          id: 'database',
-          label: 'Database SQL Studio',
-          subtitle: '14 Tabel Relasional & Query',
-          icon: Database,
-          badge: 'MySQL',
-          badgeClass: 'badge-emerald',
-        },
-        {
-          id: 'settings',
-          label: 'Pengaturan Sistem',
-          subtitle: 'Audio, Tema & Cadangan',
-          icon: Settings,
-          badge: 'Setting',
-          badgeClass: 'badge-gold',
-        },
-      ],
-    },
-    {
-      id: 'authority',
-      title: 'OTORITAS & PANEL KENDALI',
-      icon: Crown,
-      color: '#ef4444',
-      items: [
-        {
-          id: 'admin',
-          label: 'Panel Super Admin',
-          subtitle: 'Komando & Otoritas Penuh',
-          icon: Crown,
-          badge: 'SUPER',
-          badgeClass: 'badge-gold',
-        },
-        {
-          id: 'admin-progress',
-          label: 'Progres Proyek (MD)',
-          subtitle: 'Log Fitur & Roadmap',
-          icon: FileText,
-          badge: 'ROADMAP',
-          badgeClass: 'badge-emerald',
-        },
-        {
-          id: 'moderator',
-          label: 'Panel Moderator',
-          subtitle: 'Veto RUU & Ketertiban',
-          icon: ShieldCheck,
-          badge: 'MOD',
-          badgeClass: 'badge-purple',
-        },
-      ],
-    },
-  ];
 
   const handleSelectTab = (tabId) => {
     sounds.playClick();
