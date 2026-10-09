@@ -14,13 +14,18 @@ import {
   Pickaxe, 
   Coins, 
   Landmark,
-  Building
+  Building,
+  Clock,
+  Loader2,
+  CheckCircle2
 } from 'lucide-react';
 
 export default function CareerHQView() {
   const { 
     player, 
     parties, 
+    activePerkUpgrade,
+    getPerkUpgradeDuration,
     trainPerk, 
     workMine 
   } = useGame();
@@ -150,32 +155,74 @@ export default function CareerHQView() {
           {perksList.map((p) => {
             const Icon = p.icon;
             const isCharisma = p.key === 'charisma';
+            const isUpgrading = activePerkUpgrade && activePerkUpgrade.perkKey === p.key;
+            const upgradeDurationSec = getPerkUpgradeDuration ? getPerkUpgradeDuration(p.val) : 60;
+            const durationMin = Math.floor(upgradeDurationSec / 60);
+            const durationSecRem = upgradeDurationSec % 60;
+            const durationLabel = durationMin > 0 ? `${durationMin}m ${durationSecRem > 0 ? `${durationSecRem}s` : ''}`.trim() : `${durationSecRem}s`;
 
             return (
-              <div key={p.key} className={`perk-card glass-panel ${isCharisma ? 'dynamic-perk-card' : ''}`}>
+              <div key={p.key} className={`perk-card glass-panel ${isCharisma ? 'dynamic-perk-card' : ''} ${isUpgrading ? 'perk-training-active' : ''}`}>
                 <div className="perk-top">
                   <div className="perk-icon-wrapper" style={{ backgroundColor: `${p.color}20`, color: p.color }}>
                     <Icon size={20} />
                   </div>
                   <div className="perk-val-pill" style={{ borderColor: p.color, color: p.color }}>
-                    Nilai: <strong>{p.val}</strong>
+                    Nilai: <strong>{p.val}</strong> / 999
                   </div>
                 </div>
 
                 <h4 className="perk-title">{p.title}</h4>
                 <p className="perk-desc">{p.desc}</p>
 
+                {!isCharisma && p.val < 999 && (
+                  <div className="perk-duration-tag">
+                    <Clock size={12} />
+                    <span>Waktu upgrade: <strong>{durationLabel}</strong></span>
+                  </div>
+                )}
+                {!isCharisma && p.val >= 999 && (
+                  <div className="perk-duration-tag perk-max-tag">
+                    <Award size={12} />
+                    <span>Status: <strong>Tingkat Maksimal (MAX)</strong></span>
+                  </div>
+                )}
+
                 {isCharisma ? (
                   <div className="perk-auto-status-pill" title="Otomatis naik/turun menyesuaikan ketenaran dan suara pemilihan presiden">
                     <Flame size={14} className="flame-pulse-icon" />
                     <span>Otomatis Naik/Turun dari Ketenaran & Suara Pemilu</span>
                   </div>
+                ) : isUpgrading ? (
+                  <div className="perk-upgrading-progress-box">
+                    <div className="pup-header">
+                      <span><Loader2 size={13} className="spin-fast" /> Sedang Ditingkatkan</span>
+                      <strong>{Math.ceil(activePerkUpgrade.remainingSeconds)}s</strong>
+                    </div>
+                    <div className="pup-track">
+                      <div 
+                        className="pup-fill" 
+                        style={{ 
+                          width: `${Math.max(5, Math.min(100, ((activePerkUpgrade.totalDurationSeconds - activePerkUpgrade.remainingSeconds) / activePerkUpgrade.totalDurationSeconds) * 100))}%` 
+                        }}
+                      />
+                    </div>
+                  </div>
+                ) : p.val >= 999 ? (
+                  <button
+                    className="btn-gold perk-train-btn btn-perk-maxed"
+                    disabled
+                  >
+                    <CheckCircle2 size={15} /> Maksimal (999)
+                  </button>
                 ) : (
                   <button
                     className="btn-gold perk-train-btn"
                     onClick={() => trainPerk(p.key)}
+                    disabled={Boolean(activePerkUpgrade)}
+                    title={activePerkUpgrade ? 'Pelatihan lain sedang berjalan' : `Latih Atribut (${durationLabel})`}
                   >
-                    <TrendingUp size={15} /> Latih Atribut (-15 ⚡ | Rp 5 Jt)
+                    <TrendingUp size={15} /> Latih Atribut ({durationLabel} | -15 ⚡ | Rp 5 Jt)
                   </button>
                 )}
               </div>

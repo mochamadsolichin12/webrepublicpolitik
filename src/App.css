@@ -6597,6 +6597,102 @@
   box-shadow: 0 4px 20px rgba(245, 158, 11, 0.08);
 }
 
+.perk-duration-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  background: rgba(148, 163, 184, 0.08);
+  padding: 4px 8px;
+  border-radius: 6px;
+  width: fit-content;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.perk-duration-tag strong {
+  color: #38bdf8;
+}
+
+.perk-training-active {
+  border-color: rgba(56, 189, 248, 0.5) !important;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.15) !important;
+  position: relative;
+}
+
+.perk-upgrading-progress-box {
+  margin-top: 6px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.74rem;
+  color: #38bdf8;
+}
+
+.pup-header span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+}
+
+.pup-header strong {
+  color: #f8fafc;
+  font-family: monospace;
+}
+
+.pup-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pup-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #818cf8);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.spin-fast {
+  animation: spin 1s linear infinite;
+}
+
+.perk-max-tag {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #34d399 !important;
+}
+
+.perk-max-tag strong {
+  color: #10b981 !important;
+}
+
+.btn-perk-maxed {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+  cursor: default !important;
+  opacity: 0.9;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .flame-pulse-icon {
   flex-shrink: 0;
   color: #f59e0b;

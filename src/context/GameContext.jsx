@@ -601,6 +601,27 @@ export function GameProvider({ children, defaultTab }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notification, setNotification] = useState(null);
 
+  // Upgrade Perk dengan Timer
+  // Level 1 (dari skor 10 ke 11, atau perk level 1) = 60 detik (1 menit).
+  // Tiap level berikutnya bertambah 10% dari durasi level sebelumnya (misal: 60 * 1.1^(nextLevel - 1)).
+  const getPerkUpgradeDuration = useCallback((currentLevel = 10) => {
+    // currentLevel 10 (awal) -> upgrade ke 11: step 0 (durasi 60 detik / 1 menit)
+    // perk naik -> kenaikan waktu 10% per tingkat: 60 * (1.10 ^ step)
+    const step = Math.max(0, Number(currentLevel) - 10);
+    const durationSeconds = Math.round(60 * Math.pow(1.10, step));
+    return Math.max(60, durationSeconds);
+  }, []);
+
+  const [activePerkUpgrade, setActivePerkUpgrade] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY + '_active_perk_upgrade');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // ignore
+    }
+    return null;
+  });
+
   const toggleSidebar = useCallback(() => {
     setSidebarOpen((prev) => !prev);
   }, []);
@@ -638,6 +659,11 @@ export function GameProvider({ children, defaultTab }) {
       localStorage.setItem(STORAGE_KEY + '_users', JSON.stringify(usersList));
       localStorage.setItem(STORAGE_KEY + '_chat', JSON.stringify(chatMessages));
       localStorage.setItem(STORAGE_KEY + '_top_attackers', JSON.stringify(topAttackers));
+      if (activePerkUpgrade) {
+        localStorage.setItem(STORAGE_KEY + '_active_perk_upgrade', JSON.stringify(activePerkUpgrade));
+      } else {
+        localStorage.removeItem(STORAGE_KEY + '_active_perk_upgrade');
+      }
       if (currentUser) {
         localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(currentUser));
       } else {
@@ -646,7 +672,7 @@ export function GameProvider({ children, defaultTab }) {
     } catch {
       // ignore quota errors
     }
-  }, [player, regions, parties, bills, passedLaws, articles, candidates, nationalState, activeWars, warHistory, commodities, macroEconomy, playerInventory, playerFactories, workHistory, usersList, currentUser, chatMessages, topAttackers]);
+  }, [player, regions, parties, bills, passedLaws, articles, candidates, nationalState, activeWars, warHistory, commodities, macroEconomy, playerInventory, playerFactories, workHistory, usersList, currentUser, chatMessages, topAttackers, activePerkUpgrade]);
 
   // Real-Time Database Auto-Sync:
   // Setiap kali player melakukan aktivitas (bekerja, menerima gaji, naik level, membeli aset),
@@ -742,9 +768,9 @@ export function GameProvider({ children, defaultTab }) {
     }
 
     // Base charisma adalah 10.
-    // Tambahan charisma naik/turun sesuai fluktuasi ketenaran (famePolling & fameVotes)
+    // Tambahan charisma naik/turun sesuai fluktuasi ketenaran (famePolling & fameVotes), batas maksimal 999
     const dynamicCharismaBonus = Math.floor(famePolling * 0.6) + (fameVotes * 2);
-    const calculatedCharisma = Math.max(5, 10 + dynamicCharismaBonus);
+    const calculatedCharisma = Math.min(999, Math.max(5, 10 + dynamicCharismaBonus));
 
     if (player.perks?.charisma !== calculatedCharisma) {
       setPlayer((prev) => {
@@ -931,13 +957,57 @@ export function GameProvider({ children, defaultTab }) {
           };
         });
       });
+      // 6. Perk Training / Upgrade Countdown & Auto-completion
+      setActivePerkUpgrade((currentUpgrade) => {
+        if (!currentUpgrade) return null;
+        const remaining = Math.max(0, currentUpgrade.remainingSeconds - 2.5);
+        if (remaining <= 0) {
+          // Training selesai! Tingkatkan stat perk (maksimal 999)
+          const { perkKey, targetVal } = currentUpgrade;
+          const cappedVal = Math.min(999, Number(targetVal) || 10);
+          setPlayer((prev) => {
+            if (!prev) return prev;
+            const nextExp = (prev.exp || 0) + 120;
+            let newLevel = prev.level || 1;
+            let remainingExp = nextExp;
+            const maxExp = prev.maxExp || 1000;
+            if (nextExp >= maxExp) {
+              newLevel += 1;
+              remainingExp = nextExp - maxExp;
+              sounds.playSuccess();
+              showToast(`Selamat! Karir Politik Anda Naik ke Level ${newLevel}!`, 'success');
+            }
+
+            return {
+              ...prev,
+              level: newLevel,
+              exp: remainingExp,
+              maxExp: maxExp + (newLevel > (prev.level || 1) ? 400 : 0),
+              perks: {
+                ...prev.perks,
+                [perkKey]: cappedVal,
+              },
+            };
+          });
+
+          sounds.playSuccess();
+          showToast(`Pelatihan Selesai! Stat ${currentUpgrade.perkTitle || perkKey.toUpperCase()} berhasil ditingkatkan ke skor ${cappedVal}!`, 'success');
+          return null;
+        }
+
+        return {
+          ...currentUpgrade,
+          remainingSeconds: remaining,
+        };
+      });
     }, 2500);
 
     return () => clearInterval(timer);
-  }, [passedLaws]);
+  }, [passedLaws, showToast]);
 
   // Actions:
   // 1. Train Perk (Charisma & Retorika tidak dapat dilatih manual; otomatis naik/turun dari ketenaran & pemilu presiden)
+  // Waktu upgrade: Level 1 = 1 menit (60s), naik ke level selanjutnya +10% dari durasi sebelumnya. Maksimal 999.
   const trainPerk = (perkKey) => {
     sounds.playClick();
     if (!player) {
@@ -946,6 +1016,15 @@ export function GameProvider({ children, defaultTab }) {
     }
     if (perkKey === 'charisma') {
       showToast('Karisma & Retorika tidak dapat dilatih manual! Stat ini naik turun otomatis mengikuti tingkat ketenaran & suara pemilu presiden.', 'info');
+      return;
+    }
+    const currentVal = (player.perks && player.perks[perkKey]) || 10;
+    if (currentVal >= 999) {
+      showToast(`Stat ${perkKey.toUpperCase()} sudah mencapai batas maksimal (999)!`, 'info');
+      return;
+    }
+    if (activePerkUpgrade) {
+      showToast(`Sedang ada pelatihan aktif: ${activePerkUpgrade.perkTitle || activePerkUpgrade.perkKey}. Harap tunggu hingga selesai (${Math.ceil(activePerkUpgrade.remainingSeconds)}s tersisa).`, 'info');
       return;
     }
     if ((player.energy || 0) < 15) {
@@ -958,35 +1037,40 @@ export function GameProvider({ children, defaultTab }) {
       return;
     }
 
+    const targetVal = Math.min(999, currentVal + 1);
+    const durationSeconds = getPerkUpgradeDuration(currentVal);
+
+    // Deduksi sumber daya langsung saat latihan dimulai
     setPlayer((prev) => {
       if (!prev) return prev;
-      const nextExp = (prev.exp || 0) + 120;
-      let newLevel = prev.level || 1;
-      let remainingExp = nextExp;
-      const maxExp = prev.maxExp || 1000;
-      if (nextExp >= maxExp) {
-        newLevel += 1;
-        remainingExp = nextExp - maxExp;
-        sounds.playSuccess();
-        showToast(`Selamat! Karir Politik Anda Naik ke Level ${newLevel}!`, 'success');
-      }
-
       return {
         ...prev,
         energy: Math.max(0, (prev.energy || 0) - 15),
         money: (prev.money || 0) - costMoney,
-        level: newLevel,
-        exp: remainingExp,
-        maxExp: maxExp + (newLevel > (prev.level || 1) ? 400 : 0),
-        perks: {
-          ...prev.perks,
-          [perkKey]: ((prev.perks && prev.perks[perkKey]) || 10) + 1,
-        },
       };
     });
 
+    const perkTitles = {
+      intellect: 'Intelektualitas & Regulasi',
+      endurance: 'Ketahanan & Disiplin',
+      connections: 'Koneksi Bisnis & Oligarki',
+    };
+
+    setActivePerkUpgrade({
+      perkKey,
+      perkTitle: perkTitles[perkKey] || perkKey.toUpperCase(),
+      currentVal,
+      targetVal,
+      totalDurationSeconds: durationSeconds,
+      remainingSeconds: durationSeconds,
+      startedAt: Date.now(),
+    });
+
     sounds.playCoin();
-    showToast(`Latihan sukses! Stat ${perkKey.toUpperCase()} bertambah +1 dan EXP bertambah +120.`, 'success');
+    const minutes = Math.floor(durationSeconds / 60);
+    const secs = durationSeconds % 60;
+    const timeFormatted = minutes > 0 ? `${minutes}m ${secs > 0 ? `${secs}s` : ''}`.trim() : `${secs} detik`;
+    showToast(`Pelatihan ${perkTitles[perkKey] || perkKey} dimulai! Estimasi waktu: ${timeFormatted}.`, 'info');
   };
 
   // Update Player Profile
@@ -2712,6 +2796,8 @@ export function GameProvider({ children, defaultTab }) {
         setSidebarOpen,
         toggleSidebar,
         notification,
+        activePerkUpgrade,
+        getPerkUpgradeDuration,
         trainPerk,
         updatePlayerProfile,
         boostEnergy,
