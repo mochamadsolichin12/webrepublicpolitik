@@ -13225,6 +13225,14 @@ input:checked + .toggle-slider:before {
   text-align: center;
   outline: none;
   transition: border-color 0.15s ease;
+  -moz-appearance: textfield; /* Firefox */
+  appearance: textfield;
+}
+
+.rr-amount-input::-webkit-outer-spin-button,
+.rr-amount-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .rr-amount-input:focus {
@@ -13285,6 +13293,14 @@ input:checked + .toggle-slider:before {
   font-weight: 800;
   text-align: center;
   outline: none;
+  -moz-appearance: textfield; /* Firefox */
+  appearance: textfield;
+}
+
+.rr-price-input::-webkit-outer-spin-button,
+.rr-price-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .rr-empty-label {
