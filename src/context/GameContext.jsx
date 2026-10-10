@@ -466,12 +466,19 @@ export function GameProvider({ children, defaultTab }) {
       // fallback
     }
     return {
-      oil: 0,
-      nickel: 0,
-      cpo: 0,
-      coal: 0,
-      gold_bullion: 0,
-      rice: 0
+      batu: 150,
+      kayu: 280,
+      minyak: 85,
+      uranium: 12,
+      besi: 94,
+      tembaga: 110,
+      gas: 65,
+      oil: 85,
+      nickel: 10,
+      cpo: 20,
+      coal: 50,
+      gold_bullion: 5,
+      rice: 100
     };
   });
 
@@ -485,43 +492,95 @@ export function GameProvider({ children, defaultTab }) {
     }
     return [
       {
-        id: 'list-sample-1',
+        id: 'list-sample-batu',
         seller_id: 'usr-kader-1',
         seller_name: 'Budi Santoso (Kader Jatim)',
-        item_id: 'oil',
-        item_name: 'Minyak Mentah (Crude Oil)',
-        unit: 'Barel (bbl)',
-        quantity: 5,
-        price_per_unit: 1240000,
-        total_price: 6200000,
+        item_id: 'batu',
+        item_name: 'Batu',
+        unit: 'Unit',
+        quantity: 9209,
+        price_per_unit: 34.3,
+        total_price: 315868.7,
         status: 'active',
         created_at: new Date(Date.now() - 3600000).toISOString()
       },
       {
-        id: 'list-sample-2',
+        id: 'list-sample-kayu',
         seller_id: 'usr-kader-2',
         seller_name: 'Siti Rahma (Kader Riau)',
-        item_id: 'cpo',
-        item_name: 'Minyak Kelapa Sawit Mentah (CPO)',
-        unit: 'Metrik Ton',
-        quantity: 2,
-        price_per_unit: 14000000,
-        total_price: 28000000,
+        item_id: 'kayu',
+        item_name: 'Kayu',
+        unit: 'Unit',
+        quantity: 19816,
+        price_per_unit: 32.9,
+        total_price: 651946.4,
         status: 'active',
         created_at: new Date(Date.now() - 7200000).toISOString()
       },
       {
-        id: 'list-sample-3',
+        id: 'list-sample-minyak',
         seller_id: 'usr-kader-3',
         seller_name: 'Hendra Wijaya (Kader Kaltim)',
-        item_id: 'coal',
-        item_name: 'Batubara Kalori Tinggi (Thermal Coal)',
-        unit: 'Metrik Ton',
-        quantity: 10,
-        price_per_unit: 2050000,
-        total_price: 20500000,
+        item_id: 'minyak',
+        item_name: 'Minyak',
+        unit: 'Barel',
+        quantity: 10611,
+        price_per_unit: 25.0,
+        total_price: 265275.0,
         status: 'active',
         created_at: new Date(Date.now() - 10800000).toISOString()
+      },
+      {
+        id: 'list-sample-uranium',
+        seller_id: 'usr-kader-4',
+        seller_name: 'Agus Pratama (Kader Kalbar)',
+        item_id: 'uranium',
+        item_name: 'Uranium',
+        unit: 'Kg',
+        quantity: 2304,
+        price_per_unit: 21.6,
+        total_price: 49766.4,
+        status: 'active',
+        created_at: new Date(Date.now() - 14400000).toISOString()
+      },
+      {
+        id: 'list-sample-besi',
+        seller_id: 'usr-kader-5',
+        seller_name: 'Dewi Lestari (Kader Sulteng)',
+        item_id: 'besi',
+        item_name: 'Besi',
+        unit: 'Batang',
+        quantity: 2095,
+        price_per_unit: 36.6,
+        total_price: 76677.0,
+        status: 'active',
+        created_at: new Date(Date.now() - 18000000).toISOString()
+      },
+      {
+        id: 'list-sample-tembaga',
+        seller_id: 'usr-kader-6',
+        seller_name: 'I Made Wayan (Kader Bali)',
+        item_id: 'tembaga',
+        item_name: 'Tembaga',
+        unit: 'Gulung',
+        quantity: 18879,
+        price_per_unit: 20.0,
+        total_price: 377580.0,
+        status: 'active',
+        created_at: new Date(Date.now() - 21600000).toISOString()
+      },
+      {
+        id: 'list-sample-gas',
+        seller_id: 'usr-kader-7',
+        seller_name: 'Teuku Iskandar (Kader Aceh)',
+        item_id: 'gas',
+        item_name: 'Gas',
+        unit: 'Tabung',
+        quantity: 9064,
+        price_per_unit: 25.8,
+        total_price: 233851.2,
+        status: 'active',
+        created_at: new Date(Date.now() - 25200000).toISOString()
       }
     ];
   });

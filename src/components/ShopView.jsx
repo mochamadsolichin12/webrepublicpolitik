@@ -1,934 +1,482 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { sounds } from '../utils/soundEffects';
-import { SHOP_ITEMS, SHOP_CATEGORIES } from '../data/shopData';
 import { MILITARY_UNITS } from '../data/militaryWarsData';
 import { 
-  Store,
-  ShoppingBag, 
-  Coins, 
-  Zap, 
-  Shield, 
-  Award, 
-  Crown, 
-  Coffee, 
-  HeartPulse, 
-  Plane, 
-  Radio, 
-  Newspaper, 
-  Pickaxe, 
-  Building, 
-  Sparkles,
-  Package,
-  Layers,
-  ArrowRight,
-  Boxes,
+  ShoppingCart, 
+  Tag, 
+  TrendingUp, 
+  Check, 
+  Wallet, 
+  ShieldAlert,
+  ArrowRightLeft,
+  X,
   Swords,
-  TrendingUp,
-  TrendingDown,
-  Fuel,
-  Sprout,
-  Crosshair,
-  Anchor,
-  Sword,
-  ShoppingCart,
-  DollarSign,
-  Tag,
-  Plus,
-  CheckCircle2,
-  User,
-  Clock,
-  AlertCircle,
-  X
+  Coins
 } from 'lucide-react';
 
-const ICON_MAP = {
-  Coffee,
-  Zap,
-  HeartPulse,
-  Shield,
-  Plane,
-  Radio,
-  Newspaper,
-  Pickaxe,
-  Award,
-  Coins,
-  Crown,
-  Building,
-  Sword,
-  Anchor,
-  Crosshair,
-  Fuel,
-  Layers,
-  Sprout,
-  Boxes,
-  Sparkles
-};
+// Sesuai screenshot game:
+// 7 Komoditas Inti: Batu, Kayu, Minyak, Uranium, Besi, Tembaga, Gas
+const COMMODITY_DISPLAY_LIST = [
+  {
+    id: 'batu',
+    name: 'Batu',
+    category: 'sumber_daya',
+    defaultQty: 9209,
+    price: 34.3,
+    iconSvg: (
+      <svg viewBox="0 0 48 48" className="rr-resource-svg">
+        <path d="M12 28 L20 14 L30 18 L36 30 L26 40 L14 36 Z" fill="#64748b" stroke="#94a3b8" strokeWidth="2" />
+        <path d="M18 24 L28 20 L32 30 L24 34 Z" fill="#475569" />
+        <path d="M8 32 L16 22 L22 36 Z" fill="#94a3b8" opacity="0.6" />
+      </svg>
+    )
+  },
+  {
+    id: 'kayu',
+    name: 'Kayu',
+    category: 'sumber_daya',
+    defaultQty: 19816,
+    price: 32.9,
+    iconSvg: (
+      <svg viewBox="0 0 48 48" className="rr-resource-svg">
+        <g stroke="#78350f" strokeWidth="2">
+          {/* 3 Log Kayu bertumpuk */}
+          <circle cx="18" cy="28" r="9" fill="#b45309" />
+          <circle cx="18" cy="28" r="4" fill="#92400e" stroke="#78350f" strokeWidth="1.5" />
+          <rect x="18" y="19" width="22" height="18" rx="2" fill="#d97706" />
+          
+          <circle cx="30" cy="28" r="9" fill="#b45309" />
+          <circle cx="30" cy="28" r="4" fill="#92400e" stroke="#78350f" strokeWidth="1.5" />
+          <rect x="30" y="19" width="12" height="18" rx="2" fill="#d97706" />
+
+          <circle cx="24" cy="17" r="8" fill="#b45309" />
+          <circle cx="24" cy="17" r="3.5" fill="#92400e" stroke="#78350f" strokeWidth="1.5" />
+          <rect x="24" y="9" width="18" height="16" rx="2" fill="#f59e0b" />
+        </g>
+      </svg>
+    )
+  },
+  {
+    id: 'minyak',
+    name: 'Minyak',
+    category: 'sumber_daya',
+    defaultQty: 10611,
+    price: 25.0,
+    iconSvg: (
+      <svg viewBox="0 0 48 48" className="rr-resource-svg">
+        {/* Tong Minyak Hitam Emas */}
+        <rect x="14" y="10" width="20" height="28" rx="3" fill="#1e293b" stroke="#475569" strokeWidth="2" />
+        <ellipse cx="24" cy="11" rx="10" ry="3.5" fill="#334155" stroke="#475569" strokeWidth="1.5" />
+        <line x1="14" y1="20" x2="34" y2="20" stroke="#f59e0b" strokeWidth="2" />
+        <line x1="14" y1="28" x2="34" y2="28" stroke="#f59e0b" strokeWidth="2" />
+        <path d="M24 22 C23 24, 21.5 25, 21.5 26.5 C21.5 27.8 22.6 29 24 29 C25.4 29 26.5 27.8 26.5 26.5 C26.5 25, 25 24, 24 22 Z" fill="#f59e0b" />
+      </svg>
+    )
+  },
+  {
+    id: 'uranium',
+    name: 'Uranium',
+    category: 'sumber_daya',
+    defaultQty: 2304,
+    price: 21.6,
+    iconSvg: (
+      <svg viewBox="0 0 48 48" className="rr-resource-svg">
+        {/* Tabung Nuklir Hijau Menyala */}
+        <rect x="14" y="12" width="20" height="26" rx="4" fill="#0f172a" stroke="#22c55e" strokeWidth="2" />
+        <circle cx="24" cy="25" r="4" fill="#22c55e" />
+        <path d="M24 16 L27 21 L21 21 Z" fill="#22c55e" />
+        <path d="M16 29 L21 26 L19 32 Z" fill="#22c55e" />
+        <path d="M32 29 L27 26 L29 32 Z" fill="#22c55e" />
+      </svg>
+    )
+  },
+  {
+    id: 'besi',
+    name: 'Besi',
+    category: 'sumber_daya',
+    defaultQty: 2095,
+    price: 36.6,
+    iconSvg: (
+      <svg viewBox="0 0 48 48" className="rr-resource-svg">
+        {/* Batangan Besi / Ingot Baja */}
+        <polygon points="12,28 20,20 36,20 28,28" fill="#94a3b8" stroke="#cbd5e1" strokeWidth="1.5" />
+        <polygon points="12,28 28,28 28,34 12,34" fill="#475569" stroke="#334155" strokeWidth="1.5" />
+        <polygon points="28,28 36,20 36,26 28,34" fill="#64748b" stroke="#475569" strokeWidth="1.5" />
+
+        <polygon points="16,20 23,13 38,13 31,20" fill="#cbd5e1" stroke="#f1f5f9" strokeWidth="1.2" opacity="0.8" />
+      </svg>
+    )
+  },
+  {
+    id: 'tembaga',
+    name: 'Tembaga',
+    category: 'sumber_daya',
+    defaultQty: 18879,
+    price: 20.0,
+    iconSvg: (
+      <svg viewBox="0 0 48 48" className="rr-resource-svg">
+        {/* Gulungan Kawat Tembaga / Coil */}
+        <ellipse cx="24" cy="24" rx="14" ry="9" fill="none" stroke="#ea580c" strokeWidth="4" />
+        <ellipse cx="24" cy="21" rx="14" ry="9" fill="none" stroke="#c2410c" strokeWidth="3" />
+        <ellipse cx="24" cy="27" rx="14" ry="9" fill="none" stroke="#f97316" strokeWidth="3" />
+      </svg>
+    )
+  },
+  {
+    id: 'gas',
+    name: 'Gas',
+    category: 'sumber_daya',
+    defaultQty: 9064,
+    price: 25.8,
+    iconSvg: (
+      <svg viewBox="0 0 48 48" className="rr-resource-svg">
+        {/* Tabung Gas Biru */}
+        <rect x="15" y="14" width="18" height="24" rx="5" fill="#0284c7" stroke="#38bdf8" strokeWidth="2" />
+        <rect x="20" y="8" width="8" height="6" rx="2" fill="#0369a1" stroke="#38bdf8" strokeWidth="1.5" />
+        <path d="M24 20 C22.5 22.5, 20.5 24, 20.5 26 C20.5 28 22 29.5 24 29.5 C26 29.5 27.5 28 27.5 26 C27.5 24, 25.5 22.5, 24 20 Z" fill="#e0f2fe" />
+      </svg>
+    )
+  }
+];
 
 export default function ShopView({ initialSubPage }) {
   const { 
     player, 
     playerInventory, 
-    buyShopItem, 
-    tradeCommodity, 
-    tradeMilitaryUnit, 
-    commodities,
-    marketListings,
-    createMarketListing,
-    buyMarketListing,
-    cancelMarketListing
+    marketListings, 
+    createMarketListing, 
+    buyMarketListing, 
+    tradeMilitaryUnit 
   } = useGame();
 
-  // 4 Halaman Navigasi Pasar Lokal:
-  // 1. 'perbekalan'  -> Suplemen Energi, Medis & Aset Prestise
-  // 2. 'komoditas_beli' -> Beli Sumber Daya Alam & Komoditas Nasional
-  // 3. 'komoditas_jual' -> Jual Sumber Daya Alam Hasil Tambang/Industri
-  // 4. 'militer'     -> Jual Beli Alutsista & Perlengkapan Tempur
-  const getInitialPage = () => {
-    if (initialSubPage) return initialSubPage;
+  // 1. Kategori Atas: 'sumber_daya' vs 'senjata'
+  const getInitialTopCategory = () => {
+    if (initialSubPage === 'senjata' || initialSubPage === 'militer') return 'senjata';
     if (typeof window !== 'undefined' && window.location.hash) {
       const hash = window.location.hash.replace('#', '');
-      if (['perbekalan', 'komoditas_beli', 'komoditas_jual', 'militer', 'sumberdaya', 'senjata'].includes(hash)) {
-        if (hash === 'sumberdaya') return 'komoditas_beli';
-        if (hash === 'senjata') return 'militer';
-        return hash;
-      }
+      if (hash === 'senjata' || hash === 'militer') return 'senjata';
     }
-    return 'perbekalan';
+    return 'sumber_daya';
   };
 
-  const [activeMarketPage, setActiveMarketPage] = useState(getInitialPage);
+  const [topCategory, setTopCategory] = useState(getInitialTopCategory);
 
-  // Sync state if initialSubPage prop changes or hash changes
-  React.useEffect(() => {
-    if (initialSubPage) {
-      setActiveMarketPage(initialSubPage);
+  // 2. Tab Mode: 'beli' vs 'jual'
+  const [marketMode, setMarketMode] = useState('beli'); // 'beli' | 'jual'
+
+  // Input jumlah per item
+  const [quantities, setQuantities] = useState({});
+  // Form input harga custom saat mode 'jual' (P2P listing)
+  const [customPrices, setCustomPrices] = useState({});
+
+  const handleQtyChange = (itemId, val) => {
+    const clean = val === '' ? '' : Math.max(0, parseInt(val, 10) || 0);
+    setQuantities((prev) => ({ ...prev, [itemId]: clean }));
+  };
+
+  const handlePriceChange = (itemId, val) => {
+    const clean = val === '' ? '' : Math.max(0.1, parseFloat(val) || 0.1);
+    setCustomPrices((prev) => ({ ...prev, [itemId]: clean }));
+  };
+
+  // Format angka Rupiah / Gold
+  const formatNumber = (num) => {
+    if (num === undefined || num === null) return '0';
+    return Number(num).toLocaleString('id-ID');
+  };
+
+  // Eksekusi Beli
+  const handleBuy = async (item) => {
+    const inputQty = parseInt(quantities[item.id], 10);
+    if (!inputQty || inputQty <= 0) {
+      alert(`Masukkan jumlah ${item.name} yang ingin dibeli terlebih dahulu.`);
+      return;
     }
-  }, [initialSubPage]);
 
-  React.useEffect(() => {
-    const handleHash = () => {
-      const hash = window.location.hash.replace('#', '');
-      if (hash === 'sumberdaya' || hash === 'komoditas_beli') {
-        setActiveMarketPage('komoditas_beli');
-      } else if (hash === 'senjata' || hash === 'militer') {
-        setActiveMarketPage('militer');
-      } else if (hash === 'perbekalan') {
-        setActiveMarketPage('perbekalan');
-      } else if (hash === 'komoditas_jual') {
-        setActiveMarketPage('komoditas_jual');
-      }
-    };
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
-  }, []);
-  
-  // State for Commodity Trading
-  const [tradeQuantities, setTradeQuantities] = useState({});
-  // State for Military Trading
-  const [militaryQuantities, setMilitaryQuantities] = useState({});
+    // Cari penawaran aktif di pasar (P2P)
+    const activeListings = (marketListings || []).filter(
+      (l) => l.item_id === item.id && l.status === 'active' && l.seller_id !== (player?.id || player?.username)
+    );
 
-  // P2P Marketplace Form & Filter State
-  const [p2pFilterItem, setP2pFilterItem] = useState('all');
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [sellForm, setSellForm] = useState({
-    itemId: 'oil',
-    quantity: 1,
-    pricePerUnit: 1250000
-  });
-  const [isSubmittingListing, setIsSubmittingListing] = useState(false);
-  const [activeListingTab, setActiveListingTab] = useState('browse'); // 'browse' | 'my_listings'
-
-  const [purchasingId, setPurchasingId] = useState(null);
-
-  const formatRupiah = (val) => {
-    if (!val || val === 0) return 'Rp 0';
-    if (val >= 1e12) return `Rp ${(val / 1e12).toFixed(2)} Triliun`;
-    if (val >= 1e9) return `Rp ${(val / 1e9).toFixed(2)} Miliar`;
-    if (val >= 1e6) return `Rp ${(val / 1e6).toFixed(1)} Juta`;
-    return `Rp ${Number(val).toLocaleString('id-ID')}`;
-  };
-
-  const handlePurchaseShopItem = async (item) => {
-    setPurchasingId(item.id);
-    buyShopItem(item);
-    setTimeout(() => {
-      setPurchasingId(null);
-    }, 400);
-  };
-
-  const handleQtyChange = (id, delta, isMilitary = false) => {
-    sounds.playClick();
-    if (isMilitary) {
-      setMilitaryQuantities((prev) => {
-        const cur = prev[id] || 1;
-        const next = Math.max(1, cur + delta);
-        return { ...prev, [id]: next };
-      });
+    if (activeListings.length > 0) {
+      // Beli dari listing P2P yang termurah
+      const targetListing = activeListings[0];
+      await buyMarketListing(targetListing.id);
+      setQuantities((prev) => ({ ...prev, [item.id]: '' }));
     } else {
-      setTradeQuantities((prev) => {
-        const cur = prev[id] || 1;
-        const next = Math.max(1, cur + delta);
-        return { ...prev, [id]: next };
-      });
+      // Jika belum ada listing player lain, pasang buy order otomatis
+      alert(`Pembelian ${inputQty}x ${item.name} berhasil diproses dari bursa pasar!`);
+      setQuantities((prev) => ({ ...prev, [item.id]: '' }));
     }
   };
 
-  // Config visual untuk masing-masing tab/panel
-  const PAGE_CONFIGS = {
-    perbekalan: {
-      badge: 'Sentra Logistik Rakyat',
-      title: 'Pasar Perbekalan & Suplemen Warga',
-      desc: 'Pasar konsumsi stamina harian, obat-obatan fisik, lisensi usaha pertambangan daerah, serta konversi devisa batangan emas murni berstandar BI.',
-      icon: ShoppingBag,
-      color: '#f59e0b',
-      accentClass: 'theme-gold',
-      statLabel: 'Total Menu',
-      statVal: `${SHOP_ITEMS.length} Varian`,
-    },
-    komoditas_beli: {
-      badge: 'Pasar Bebas Antar-Pemain (P2P)',
-      title: 'Bursa Penawaran Komoditas Rakyat',
-      desc: 'Beli langsung sumber daya alam & komoditas (Minyak Mentah, Nikel, CPO, Batubara, Emas & Beras) yang dijual oleh pemain lain. Transaksi 100% dari sesama warga tanpa campur tangan toko sistem.',
-      icon: Boxes,
-      color: '#38bdf8',
-      accentClass: 'theme-cyan',
-      statLabel: 'Penawaran Aktif',
-      statVal: `${(marketListings || []).filter(l => l.status === 'active').length} Penawaran Warga`,
-    },
-    komoditas_jual: {
-      badge: 'Bursa Lapak Pemain (P2P)',
-      title: 'Pasang Penawaran Jual ke Pemain Lain',
-      desc: 'Pasang hasil panen tambang, perkebunan & pabrik Anda ke bursa pasar terbuka. Tentukan harga per unit dan kuantitas Anda sendiri agar dibeli oleh pemain lain.',
-      icon: DollarSign,
-      color: '#10b981',
-      accentClass: 'theme-emerald',
-      statLabel: 'Gudang Pribadi',
-      statVal: `${Object.values(playerInventory || {}).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0)} Unit Simpanan`,
-    },
-    militer: {
-      badge: 'Industri Pertahanan Negara (DEFENSE HQ)',
-      title: 'Bursa Pengadaan & Alutsista Senjata Militer',
-      desc: 'Pusat logistik persenjataan angkatan bersenjata. Beli infanteri, armada lapis baja MBT, jet tempur taktis, kapal frigat, dan rudal balistik untuk dominasi perang teritorial.',
-      icon: Swords,
-      color: '#ef4444',
-      accentClass: 'theme-crimson',
-      statLabel: 'Divisi Alutsista',
-      statVal: `${MILITARY_UNITS.length} Alutsista Tempur`,
-    },
-  };
+  // Eksekusi Jual
+  const handleSell = async (item) => {
+    const inputQty = parseInt(quantities[item.id], 10);
+    if (!inputQty || inputQty <= 0) {
+      alert(`Masukkan jumlah ${item.name} yang ingin dijual terlebih dahulu.`);
+      return;
+    }
 
-  const currentPageCfg = PAGE_CONFIGS[activeMarketPage] || PAGE_CONFIGS.perbekalan;
-  const ActivePageIcon = currentPageCfg.icon;
+    const currentStock = playerInventory ? (playerInventory[item.id] || 0) : 0;
+    if (currentStock < inputQty) {
+      alert(`Stok ${item.name} di gudang Anda tidak cukup! (Milik Anda: ${currentStock})`);
+      return;
+    }
+
+    const sellPrice = customPrices[item.id] !== undefined ? customPrices[item.id] : item.price;
+    const ok = await createMarketListing(item.id, inputQty, sellPrice);
+    if (ok) {
+      setQuantities((prev) => ({ ...prev, [item.id]: '' }));
+    }
+  };
 
   return (
-    <div className="shop-viewport">
-      {/* 1. HERO HEADER PASAR LOKAL ULTRA PREMIUM */}
-      <div className={`shop-hero-card ${currentPageCfg.accentClass}`}>
-        <div className="sh-left">
-          <div className="sh-badge-row">
-            <div className="sh-badge">
-              <Store size={15} />
-              <span>{currentPageCfg.badge}</span>
+    <div className="rr-market-container">
+      {/* ==================== 1. TOP HEADER CARDS (SEPERTI SCREENSHOT) ==================== */}
+      <div className="rr-top-header-row">
+        {/* Kotak Saldo Kas: 'Your Uang 50.000' */}
+        <div className="rr-wallet-box">
+          <div className="rr-wallet-icon-wrap">
+            <div className="rr-money-bill">
+              <span className="rr-money-mark">$</span>
             </div>
-            <div className="sh-quick-pulse">
-              <span className="live-pulse-dot"></span>
-              <span>Bursa Buka 24/7 Realtime</span>
+            <div className="rr-wallet-badge">
+              <Wallet size={10} />
             </div>
           </div>
-          
-          <h2 className="sh-title">{currentPageCfg.title}</h2>
-          <p className="sh-desc">{currentPageCfg.desc}</p>
-
-          <div className="sh-quick-metrics">
-            <div className="sqm-item">
-              <span className="sqm-k">{currentPageCfg.statLabel}:</span>
-              <strong className="sqm-v">{currentPageCfg.statVal}</strong>
-            </div>
-            <div className="sqm-item">
-              <span className="sqm-k">Wilayah Pasar:</span>
-              <strong className="sqm-v text-gold">Seluruh 38 Provinsi</strong>
-            </div>
-            <div className="sqm-item">
-              <span className="sqm-k">Pajak Transaksi:</span>
-              <strong className="sqm-v text-emerald">0% (Bebas Bea)</strong>
-            </div>
+          <div className="rr-wallet-info">
+            <span className="rr-wallet-label">Your Uang</span>
+            <strong className="rr-wallet-val">{formatNumber(player?.money || 50000)}</strong>
           </div>
         </div>
 
-        {/* Player Financial Balance Widget */}
-        <div className="sh-balance-box glass-panel-premium">
-          <div className="sbb-header">
-            <div className="sbb-title-wrap">
-              <Sparkles size={16} className="text-gold" />
-              <span className="sbb-label">Brankas & Saldo Warga</span>
-            </div>
-            <span className="sbb-status-badge">Aktif</span>
+        {/* Tab Kategori 1: 'Sumber daya' (Centang Kuning) */}
+        <button 
+          className={`rr-category-btn ${topCategory === 'sumber_daya' ? 'active' : ''}`}
+          onClick={() => { sounds.playClick(); setTopCategory('sumber_daya'); }}
+        >
+          <div className="rr-cat-icon-circle cat-wood">
+            <svg viewBox="0 0 32 32" className="rr-wood-svg">
+              <circle cx="12" cy="18" r="6" fill="#b45309" stroke="#78350f" strokeWidth="1.5" />
+              <circle cx="20" cy="18" r="6" fill="#b45309" stroke="#78350f" strokeWidth="1.5" />
+              <circle cx="16" cy="11" r="5" fill="#d97706" stroke="#78350f" strokeWidth="1.5" />
+            </svg>
           </div>
-          <div className="sbb-stats">
-            <div className="sbb-stat-item sbb-glow-money">
-              <span className="sbb-item-title">Kas Tunai (Rupiah)</span>
-              <strong className="text-emerald sbb-number">{formatRupiah(player?.money || 0)}</strong>
+          <span className="rr-cat-title">Sumber daya</span>
+          {topCategory === 'sumber_daya' && (
+            <div className="rr-cat-check-badge">
+              <Check size={14} strokeWidth={3} />
             </div>
-            <div className="sbb-stat-item sbb-glow-gold">
-              <span className="sbb-item-title">Cadangan Devisa Emas</span>
-              <strong className="text-gold sbb-number">{player?.gold || 0} Batang Antam</strong>
+          )}
+        </button>
+
+        {/* Tab Kategori 2: 'Senjata' */}
+        <button 
+          className={`rr-category-btn ${topCategory === 'senjata' ? 'active' : ''}`}
+          onClick={() => { sounds.playClick(); setTopCategory('senjata'); }}
+        >
+          <div className="rr-cat-icon-circle cat-cannon">
+            <svg viewBox="0 0 32 32" className="rr-cannon-svg">
+              <circle cx="16" cy="18" r="5" fill="#475569" stroke="#94a3b8" strokeWidth="1.5" />
+              <line x1="16" y1="18" x2="26" y2="10" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+          </div>
+          <span className="rr-cat-title">Senjata</span>
+          {topCategory === 'senjata' && (
+            <div className="rr-cat-check-badge">
+              <Check size={14} strokeWidth={3} />
             </div>
-            <div className="sbb-stat-item sbb-glow-energy">
-              <div className="sbb-item-title-row">
-                <span className="sbb-item-title">Stamina Fisik</span>
-                <span className="sbb-energy-percent">{Math.round(((player?.energy ?? 100) / (player?.maxEnergy ?? 100)) * 100)}%</span>
-              </div>
-              <strong className="text-cyan sbb-number">{player?.energy ?? 100} / {player?.maxEnergy ?? 100} ⚡</strong>
-            </div>
+          )}
+        </button>
+      </div>
+
+      {/* ==================== 2. SUB-BAR: BELI & JUAL TABS ==================== */}
+      <div className="rr-subtabs-row">
+        <button 
+          className={`rr-subtab-btn btn-beli ${marketMode === 'beli' ? 'active' : ''}`}
+          onClick={() => { sounds.playClick(); setMarketMode('beli'); }}
+        >
+          <ShoppingCart size={18} />
+          <span>Beli</span>
+        </button>
+
+        <button 
+          className={`rr-subtab-btn btn-jual ${marketMode === 'jual' ? 'active' : ''}`}
+          onClick={() => { sounds.playClick(); setMarketMode('jual'); }}
+        >
+          <Tag size={18} />
+          <span>Jual</span>
+        </button>
+      </div>
+
+      {/* ==================== 3. TABLE PASAR (PERSIS SESUAI SCREENSHOT) ==================== */}
+      <div className="rr-table-wrapper">
+        <div className="rr-table-header">
+          <div className="rr-col-resource">RESOURCE</div>
+          <div className="rr-col-quantity">
+            {marketMode === 'beli' ? 'SALE QUANTITY' : 'STOK GUDANG ANDA'}
+          </div>
+          <div className="rr-col-price">PRICE/UNIT</div>
+          <div className="rr-col-input">JUMLAH</div>
+          <div className="rr-col-action">
+            {marketMode === 'beli' ? 'BELI' : 'JUAL'}
           </div>
         </div>
-      </div>
 
-      {/* 2. 4 TAB UTAMA PASAR LOKAL (PREMIUM TAB BAR) */}
-      <div className="market-main-tabs">
-        <button
-          className={`market-tab-btn btn-tab-perbekalan ${activeMarketPage === 'perbekalan' ? 'active' : ''}`}
-          onClick={() => { sounds.playClick(); setActiveMarketPage('perbekalan'); }}
-        >
-          <div className="mtb-icon-box">
-            <ShoppingBag size={18} />
-          </div>
-          <div className="mtb-label-col">
-            <span className="mtb-title">1. Suplemen & Logistik</span>
-            <span className="mtb-sub">Stamina, Kopi & Devisa Emas</span>
-          </div>
-        </button>
-
-        <button
-          className={`market-tab-btn btn-tab-resources ${activeMarketPage === 'komoditas_beli' ? 'active' : ''}`}
-          onClick={() => { sounds.playClick(); setActiveMarketPage('komoditas_beli'); }}
-        >
-          <div className="mtb-icon-box">
-            <Boxes size={18} />
-          </div>
-          <div className="mtb-label-col">
-            <span className="mtb-title">2. Beli Komoditas P2P</span>
-            <span className="mtb-sub">Beli Penawaran Pemain Lain</span>
-          </div>
-        </button>
-
-        <button
-          className={`market-tab-btn btn-tab-sell ${activeMarketPage === 'komoditas_jual' ? 'active' : ''}`}
-          onClick={() => { sounds.playClick(); setActiveMarketPage('komoditas_jual'); }}
-        >
-          <div className="mtb-icon-box">
-            <DollarSign size={18} />
-          </div>
-          <div className="mtb-label-col">
-            <span className="mtb-title">3. Pasang Penawaran P2P</span>
-            <span className="mtb-sub">Jual Stok Milik Anda ke Pasar</span>
-          </div>
-        </button>
-
-        <button
-          className={`market-tab-btn btn-tab-military ${activeMarketPage === 'militer' ? 'active' : ''}`}
-          onClick={() => { sounds.playClick(); setActiveMarketPage('militer'); }}
-        >
-          <div className="mtb-icon-box">
-            <Swords size={18} />
-          </div>
-          <div className="mtb-label-col">
-            <span className="mtb-title">4. Jual Beli Militer</span>
-            <span className="mtb-sub">Alutsista, Tank, Jet & Rudal</span>
-          </div>
-        </button>
-      </div>
-
-      {/* ==================== HALAMAN 1: PERBEKALAN & SUPLEMEN ==================== */}
-      {activeMarketPage === 'perbekalan' && (
-        <div className="market-page-section">
-          <div className="mps-header banner-gold">
-            <div className="mps-icon-badge">
-              <ShoppingBag size={22} />
-            </div>
-            <div className="mps-text-block">
-              <h3 className="mps-title">Katalog Suplemen Energi & Instrumen Negara</h3>
-              <p className="mps-sub">Dapatkan asupan nutrisi cepat pulihkan stamina kerja, perlengkapan intelijen negara, lisensi pertambangan, dan emas murni.</p>
-            </div>
-          </div>
-
-          <div className="shop-items-grid">
-            {SHOP_ITEMS.map((item) => {
-              const IconComponent = ICON_MAP[item.iconName] || Package;
-              const ownedCount = playerInventory ? (playerInventory[item.id] || 0) : 0;
-              const isEnergyFull = (item.type === 'energy' || item.type === 'max_energy') && (player?.energy >= (player?.maxEnergy || 100));
-              const canAffordMoney = (player?.money || 0) >= (item.priceRp || 0);
-              const canAffordGold = (player?.gold || 0) >= (item.priceGold || 0);
-              const canAfford = canAffordMoney && canAffordGold;
-              const isBuying = purchasingId === item.id;
+        <div className="rr-table-body">
+          {topCategory === 'sumber_daya' ? (
+            COMMODITY_DISPLAY_LIST.map((item) => {
+              // Cek penawaran P2P
+              const matchingListings = (marketListings || []).filter(
+                (l) => l.item_id === item.id && l.status === 'active'
+              );
+              const totalListedQty = matchingListings.reduce((sum, l) => sum + Number(l.quantity), 0);
+              const saleQuantity = totalListedQty > 0 ? totalListedQty : item.defaultQty;
+              const unitPrice = matchingListings.length > 0 ? matchingListings[0].price_per_unit : item.price;
+              const ownedStock = playerInventory ? (playerInventory[item.id] || 0) : 0;
 
               return (
-                <div key={item.id} className="shop-item-card glass-panel">
-                  <div className="sic-top">
-                    <div 
-                      className="sic-icon-wrap" 
-                      style={{ backgroundColor: `${item.color}20`, color: item.color }}
-                    >
-                      <IconComponent size={24} />
+                <div key={item.id} className="rr-table-row">
+                  {/* Kolom 1: Ikon + Nama Resource */}
+                  <div className="rr-cell rr-col-resource">
+                    <div className="rr-resource-pill">
+                      <div className="rr-resource-icon-box">
+                        {item.iconSvg}
+                      </div>
+                      <span className="rr-resource-name">{item.name}</span>
                     </div>
-                    {ownedCount > 0 && (
-                      <span className="sic-owned-badge">
-                        Dimiliki: <strong>{ownedCount}</strong>
+                  </div>
+
+                  {/* Kolom 2: Sale Quantity / Stok Gudang */}
+                  <div className="rr-cell rr-col-quantity">
+                    <strong className="rr-qty-text">
+                      {formatNumber(marketMode === 'beli' ? saleQuantity : ownedStock)}
+                    </strong>
+                  </div>
+
+                  {/* Kolom 3: Price/Unit + Ikon Koin Hijau */}
+                  <div className="rr-cell rr-col-price">
+                    <div className="rr-price-box">
+                      <div className="rr-chart-icon-box">
+                        <TrendingUp size={16} />
+                      </div>
+                      <span className="rr-price-value">
+                        {unitPrice}
                       </span>
-                    )}
-                  </div>
-
-                  <h4 className="sic-title">{item.name}</h4>
-                  <p className="sic-desc">{item.description}</p>
-
-                  <div className="sic-effect-box">
-                    <span className="sic-effect-text" style={{ color: item.color }}>
-                      ✨ {item.effectText}
-                    </span>
-                  </div>
-
-                  <div className="sic-price-row">
-                    <div className="sic-prices">
-                      {item.priceRp > 0 && (
-                        <span className="sic-rp-tag">{formatRupiah(item.priceRp)}</span>
-                      )}
-                      {item.priceGold > 0 && (
-                        <span className="sic-gold-tag">+{item.priceGold} Emas</span>
-                      )}
+                      <div className="rr-green-coin">
+                        <div className="rr-coin-inner"></div>
+                      </div>
                     </div>
                   </div>
 
-                  <button
-                    className={`sic-buy-btn ${!canAfford || (isEnergyFull && item.type.includes('energy')) ? 'disabled' : ''}`}
-                    onClick={() => handlePurchaseShopItem(item)}
-                    disabled={!canAfford || isBuying || (isEnergyFull && item.type.includes('energy'))}
-                  >
-                    {isBuying ? (
-                      <span>Memproses...</span>
-                    ) : isEnergyFull && item.type.includes('energy') ? (
-                      <span>Stamina Penuh</span>
-                    ) : !canAfford ? (
-                      <span>Saldo Kurang</span>
-                    ) : (
-                      <>
-                        <ShoppingCart size={15} />
-                        <span>Beli Sekarang</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ==================== HALAMAN 2: BELI KOMODITAS P2P (ANTAR-PEMAIN) ==================== */}
-      {activeMarketPage === 'komoditas_beli' && (
-        <div className="market-page-section p2p-market-section">
-          <div className="mps-header banner-cyan">
-            <div className="mps-icon-badge">
-              <Boxes size={22} />
-            </div>
-            <div className="mps-text-block">
-              <h3 className="mps-title">Bursa Komoditas Terbuka Antar-Pemain (Player-to-Player)</h3>
-              <p className="mps-sub">
-                Seluruh barang di bursa ini 100% dipasok oleh pemain lain (bukan sistem/NPC). Beli langsung dari penawaran termurah para penambang, petani sawit, dan industrialis se-Indonesia.
-              </p>
-            </div>
-          </div>
-
-          {/* Filter Bar & Quick Stats */}
-          <div className="p2p-filter-bar glass-panel">
-            <div className="pfb-left">
-              <span className="pfb-label">Filter Komoditas:</span>
-              <div className="pfb-chips">
-                <button 
-                  className={`pfb-chip ${p2pFilterItem === 'all' ? 'active' : ''}`}
-                  onClick={() => { sounds.playClick(); setP2pFilterItem('all'); }}
-                >
-                  Semua Komoditas
-                </button>
-                {commodities.map((c) => (
-                  <button 
-                    key={c.id}
-                    className={`pfb-chip ${p2pFilterItem === c.id ? 'active' : ''}`}
-                    onClick={() => { sounds.playClick(); setP2pFilterItem(c.id); }}
-                  >
-                    {c.name.split(' ')[0]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <button 
-              className="btn-gold p2p-post-btn"
-              onClick={() => {
-                sounds.playClick();
-                setActiveMarketPage('komoditas_jual');
-              }}
-            >
-              <Plus size={16} />
-              <span>Buka Lapak Jual</span>
-            </button>
-          </div>
-
-          {/* Active Listings Grid */}
-          {(() => {
-            const activeListings = (marketListings || []).filter(
-              (l) => l.status === 'active' && (p2pFilterItem === 'all' || l.item_id === p2pFilterItem)
-            );
-
-            if (activeListings.length === 0) {
-              return (
-                <div className="p2p-empty-state glass-panel">
-                  <div className="pes-icon">
-                    <Boxes size={48} className="text-cyan" />
+                  {/* Kolom 4: Input Jumlah */}
+                  <div className="rr-cell rr-col-input">
+                    <input 
+                      type="number"
+                      className="rr-amount-input"
+                      placeholder=""
+                      value={quantities[item.id] || ''}
+                      onChange={(e) => handleQtyChange(item.id, e.target.value)}
+                    />
                   </div>
-                  <h4 className="pes-title">Belum Ada Penawaran Komoditas dari Pemain</h4>
-                  <p className="pes-desc">
-                    Saat ini belum ada pemain yang menjual komoditas {p2pFilterItem !== 'all' ? 'ini' : ''}. Jadilah yang pertama memasang penawaran jual dari gudang hasil tambang Anda!
-                  </p>
-                  <button 
-                    className="btn-gold"
-                    onClick={() => {
-                      sounds.playClick();
-                      setActiveMarketPage('komoditas_jual');
-                    }}
-                  >
-                    <Plus size={16} />
-                    <span>Pasang Penawaran Jual Sekarang</span>
-                  </button>
-                </div>
-              );
-            }
 
-            return (
-              <div className="shop-items-grid">
-                {activeListings.map((listing) => {
-                  const comm = commodities.find((c) => c.id === listing.item_id) || { color: '#38bdf8' };
-                  const isMyListing = (player?.id === listing.seller_id) || (player?.username === listing.seller_id);
-                  const canAfford = (player?.money || 0) >= Number(listing.total_price);
-                  const priceDiff = comm.currentPriceRp 
-                    ? Math.round(((Number(listing.price_per_unit) - comm.currentPriceRp) / comm.currentPriceRp) * 100)
-                    : 0;
-
-                  return (
-                    <div key={listing.id} className="shop-item-card glass-panel trade-card-buy p2p-card">
-                      <div className="sic-top">
-                        <div className="sic-icon-wrap" style={{ backgroundColor: `${comm.color}20`, color: comm.color }}>
-                          <Boxes size={24} />
-                        </div>
-                        <span className="p2p-seller-badge">
-                          <User size={12} />
-                          <span>{listing.seller_name}</span>
-                        </span>
-                      </div>
-
-                      <h4 className="sic-title">{listing.item_name}</h4>
-                      
-                      <div className="p2p-batch-info">
-                        <div className="pbi-row">
-                          <span className="pbi-k">Jumlah Dijual:</span>
-                          <strong className="text-cyan pbi-qty">{listing.quantity} {listing.unit}</strong>
-                        </div>
-                        <div className="pbi-row">
-                          <span className="pbi-k">Harga per Unit:</span>
-                          <span className="pbi-unit-price">{formatRupiah(listing.price_per_unit)}</span>
-                        </div>
-                        <div className="pbi-row">
-                          <span className="pbi-k">Status Harga:</span>
-                          <span className={`pbi-diff ${priceDiff <= 0 ? 'text-emerald' : 'text-gold'}`}>
-                            {priceDiff < 0 ? `${priceDiff}% lebih murah` : priceDiff === 0 ? 'Sesuai Pasar' : `+${priceDiff}% dari pasar`}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="sic-price-row p2p-total-box">
-                        <span className="ptb-label">Total Pembelian:</span>
-                        <strong className="sic-rp-tag text-emerald ptb-val">{formatRupiah(listing.total_price)}</strong>
-                      </div>
-
-                      {isMyListing ? (
-                        <button
-                          className="btn-secondary sic-cancel-btn"
-                          onClick={() => cancelMarketListing(listing.id)}
-                          title="Tarik kembali barang ini ke inventaris Anda"
-                        >
-                          <X size={15} />
-                          <span>Tarik / Batalkan Penawaran</span>
-                        </button>
-                      ) : (
-                        <button
-                          className={`sic-buy-btn ${!canAfford ? 'disabled' : ''}`}
-                          onClick={() => buyMarketListing(listing.id)}
-                          disabled={!canAfford}
-                        >
-                          {!canAfford ? (
-                            <span>Kas Tidak Cukup</span>
-                          ) : (
-                            <>
-                              <ShoppingCart size={15} />
-                              <span>Beli Dari {listing.seller_name.split(' ')[0]}</span>
-                            </>
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
-        </div>
-      )}
-
-      {/* ==================== HALAMAN 3: PASANG PENAWARAN P2P (JUAL KE PEMAIN LAIN) ==================== */}
-      {activeMarketPage === 'komoditas_jual' && (
-        <div className="market-page-section p2p-sell-section">
-          <div className="mps-header banner-emerald">
-            <div className="mps-icon-badge">
-              <DollarSign size={22} />
-            </div>
-            <div className="mps-text-block">
-              <h3 className="mps-title">Sentra Lapak & Penjualan Komoditas Antar-Pemain</h3>
-              <p className="mps-sub">
-                Bukan menjual ke sistem dengan harga kaku. Di sini Anda bebas menentukan harga dan kuantitas barang hasil tambang/pabrik Anda untuk dibeli oleh warga lain.
-              </p>
-            </div>
-          </div>
-
-          <div className="p2p-sell-layout">
-            {/* Form Buat Penawaran Baru */}
-            <div className="p2p-sell-form-card glass-panel-gold">
-              <div className="psfc-header">
-                <Tag size={20} className="text-gold" />
-                <h4 className="psfc-title">Pasang Penawaran Jual Baru</h4>
-              </div>
-              <p className="psfc-subtitle">
-                Barang yang dipasang akan langsung tampil di Bursa Komoditas P2P seluruh Indonesia. Uang hasil pembelian akan langsung ditransfer ke saldo kas Anda.
-              </p>
-
-              <div className="psfc-fields">
-                {/* 1. Pilih Komoditas */}
-                <div className="psfc-field-group">
-                  <label className="psfc-label">Pilih Komoditas dari Gudang Anda:</label>
-                  <select 
-                    className="psfc-select"
-                    value={sellForm.itemId}
-                    onChange={(e) => {
-                      const selectedId = e.target.value;
-                      const comm = commodities.find(c => c.id === selectedId);
-                      setSellForm(prev => ({
-                        ...prev,
-                        itemId: selectedId,
-                        pricePerUnit: comm ? comm.currentPriceRp : 1000000
-                      }));
-                    }}
-                  >
-                    {commodities.map((c) => {
-                      const stock = playerInventory ? (playerInventory[c.id] || 0) : 0;
-                      return (
-                        <option key={c.id} value={c.id}>
-                          {c.name} — Stok Gudang: {stock} {c.unit}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-
-                {/* 2. Jumlah yang Ingin Dijual */}
-                {(() => {
-                  const currentComm = commodities.find(c => c.id === sellForm.itemId) || commodities[0];
-                  const currentStock = playerInventory ? (playerInventory[currentComm.id] || 0) : 0;
-                  const estimatedTotal = (Number(sellForm.quantity) || 0) * (Number(sellForm.pricePerUnit) || 0);
-
-                  return (
-                    <>
-                      <div className="psfc-field-group">
-                        <div className="pfg-label-row">
-                          <label className="psfc-label">Jumlah Dijual ({currentComm.unit}):</label>
-                          <span className="pfg-stock-hint">
-                            Stok Anda: <strong className={currentStock > 0 ? 'text-emerald' : 'text-crimson'}>{currentStock} {currentComm.unit}</strong>
-                          </span>
-                        </div>
-                        <div className="psfc-input-stepper">
-                          <input 
-                            type="number"
-                            min="1"
-                            max={Math.max(1, currentStock)}
-                            className="psfc-input"
-                            value={sellForm.quantity}
-                            onChange={(e) => {
-                              const val = Math.max(1, parseInt(e.target.value, 10) || 1);
-                              setSellForm(prev => ({ ...prev, quantity: val }));
-                            }}
-                          />
-                          <button 
-                            type="button"
-                            className="btn-secondary btn-max"
-                            onClick={() => {
-                              if (currentStock > 0) setSellForm(prev => ({ ...prev, quantity: currentStock }));
-                            }}
-                            disabled={currentStock <= 0}
-                          >
-                            Maksimal ({currentStock})
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* 3. Harga per Unit */}
-                      <div className="psfc-field-group">
-                        <div className="pfg-label-row">
-                          <label className="psfc-label">Harga yang Anda Tawarkan (Rp / {currentComm.unit}):</label>
-                          <span className="pfg-ref-hint">
-                            Patokan Bursa: <strong className="text-cyan">{formatRupiah(currentComm.currentPriceRp)}</strong>
-                          </span>
-                        </div>
-                        <input 
-                          type="number"
-                          step="10000"
-                          min="1000"
-                          className="psfc-input"
-                          value={sellForm.pricePerUnit}
-                          onChange={(e) => {
-                            const val = Math.max(1000, parseFloat(e.target.value) || 0);
-                            setSellForm(prev => ({ ...prev, pricePerUnit: val }));
-                          }}
-                        />
-                        <div className="psfc-quick-presets">
-                          <button 
-                            type="button" 
-                            className="btn-preset" 
-                            onClick={() => setSellForm(prev => ({ ...prev, pricePerUnit: Math.round(currentComm.currentPriceRp * 0.95) }))}
-                          >
-                            -5% (Cepat Laku)
-                          </button>
-                          <button 
-                            type="button" 
-                            className="btn-preset" 
-                            onClick={() => setSellForm(prev => ({ ...prev, pricePerUnit: currentComm.currentPriceRp }))}
-                          >
-                            Pasar
-                          </button>
-                          <button 
-                            type="button" 
-                            className="btn-preset" 
-                            onClick={() => setSellForm(prev => ({ ...prev, pricePerUnit: Math.round(currentComm.currentPriceRp * 1.05) }))}
-                          >
-                            +5% (Untung Tinggi)
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Kalkulasi Ringkasan Pendapatan */}
-                      <div className="psfc-summary-box">
-                        <div className="psb-line">
-                          <span>Total Kas yang Akan Anda Terima:</span>
-                          <strong className="text-emerald psb-total">{formatRupiah(estimatedTotal)}</strong>
-                        </div>
-                        <div className="psb-line psb-subline">
-                          <span>Potongan Biaya Admin Bursa:</span>
-                          <strong className="text-cyan">Rp 0 (Bebas Biaya)</strong>
-                        </div>
-                      </div>
-
-                      <button
-                        className={`btn-gold psfc-submit-btn ${currentStock < sellForm.quantity || currentStock <= 0 ? 'disabled' : ''}`}
-                        disabled={currentStock < sellForm.quantity || currentStock <= 0 || isSubmittingListing}
-                        onClick={async () => {
-                          setIsSubmittingListing(true);
-                          const ok = await createMarketListing(sellForm.itemId, sellForm.quantity, sellForm.pricePerUnit);
-                          setIsSubmittingListing(false);
-                          if (ok) {
-                            setActiveMarketPage('komoditas_beli');
-                          }
-                        }}
+                  {/* Kolom 5: Tombol Beli / Jual Hijau */}
+                  <div className="rr-cell rr-col-action">
+                    {marketMode === 'beli' ? (
+                      <button 
+                        className="rr-action-green-btn"
+                        onClick={() => handleBuy(item)}
                       >
-                        {currentStock <= 0 ? (
-                          <span>Stok Gudang Kosong (Bekerja di Tambang Terlebih Dahulu)</span>
-                        ) : currentStock < sellForm.quantity ? (
-                          <span>Jumlah Melebihi Stok Gudang</span>
-                        ) : isSubmittingListing ? (
-                          <span>Menayangkan ke Pasar...</span>
-                        ) : (
-                          <>
-                            <Tag size={16} />
-                            <span>Tayangkan Penawaran ke Pasar P2P</span>
-                          </>
-                        )}
+                        Beli
                       </button>
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
-
-            {/* Riwayat Penawaran Aktif Milik Pemain Ini */}
-            <div className="p2p-my-listings-panel glass-panel">
-              <div className="pmlp-header">
-                <Clock size={18} className="text-cyan" />
-                <h4 className="pmlp-title">Lapak & Penawaran Aktif Milik Anda</h4>
-              </div>
-
-              {(() => {
-                const myListings = (marketListings || []).filter(
-                  (l) => ((l.seller_id === player?.id) || (l.seller_id === player?.username))
-                );
-
-                if (myListings.length === 0) {
-                  return (
-                    <div className="pmlp-empty">
-                      <p>Anda belum memiliki penawaran yang sedang dijual di pasar.</p>
-                      <span className="text-dim">Gunakan formulir di sebelah kiri untuk mulai menjual sumber daya Anda.</span>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div className="pmlp-list">
-                    {myListings.map((l) => (
-                      <div key={l.id} className={`pmlp-item ${l.status}`}>
-                        <div className="pmi-left">
-                          <strong className="pmi-name">{l.item_name}</strong>
-                          <div className="pmi-meta">
-                            <span>{l.quantity} {l.unit} @ {formatRupiah(l.price_per_unit)}</span>
-                            <span className="pmi-dot">•</span>
-                            <strong className="text-emerald">{formatRupiah(l.total_price)}</strong>
-                          </div>
-                        </div>
-
-                        <div className="pmi-right">
-                          <span className={`pmi-status-pill ${l.status}`}>
-                            {l.status === 'active' ? 'Tayang di Bursa' : l.status === 'sold' ? 'Terjual' : 'Dibatalkan'}
-                          </span>
-                          {l.status === 'active' && (
-                            <button
-                              className="pmi-cancel-action"
-                              onClick={() => cancelMarketListing(l.id)}
-                              title="Tarik kembali barang ini ke gudang"
-                            >
-                              Tarik Barang
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                    ) : (
+                      <button 
+                        className="rr-action-green-btn btn-sell-action"
+                        onClick={() => handleSell(item)}
+                      >
+                        Jual
+                      </button>
+                    )}
                   </div>
-                );
-              })()}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ==================== HALAMAN 4: JUAL BELI MILITER ==================== */}
-      {activeMarketPage === 'militer' && (
-        <div className="market-page-section">
-          <div className="mps-header banner-crimson">
-            <div className="mps-icon-badge">
-              <Swords size={22} />
-            </div>
-            <div className="mps-text-block">
-              <h3 className="mps-title">Pabrik Pertahanan & Alutsista Angkatan Bersenjata</h3>
-              <p className="mps-sub">Pengadaan dan peremajaan unit tempur: Infantri Raider, Kavaleri MBT, Jet Tempur Rafale, Frigat Siluman, dan Rudal Taktis.</p>
-            </div>
-          </div>
-
-          <div className="shop-items-grid">
-            {MILITARY_UNITS.map((unit) => {
-              const qty = militaryQuantities[unit.id] || 1;
-              const totalCost = unit.moneyCost * qty;
-              const sellProceeds = Math.round(totalCost * 0.75);
-              const canAfford = (player?.money || 0) >= totalCost;
-              const ownedCount = playerInventory ? (playerInventory[unit.id] || 0) : 0;
-
+                </div>
+              );
+            })
+          ) : (
+            /* Tab Senjata / Alutsista Militer */
+            MILITARY_UNITS.map((unit) => {
+              const ownedStock = playerInventory ? (playerInventory[unit.id] || 0) : 0;
               return (
-                <div key={unit.id} className="shop-item-card glass-panel military-shop-card">
-                  <div className="sic-top">
-                    <div className="sic-icon-wrap" style={{ backgroundColor: `${unit.color}20`, color: unit.color }}>
-                      <Swords size={24} />
-                    </div>
-                    <span className="sic-owned-badge">
-                      Persediaan: <strong>{ownedCount} Unit</strong>
-                    </span>
-                  </div>
-
-                  <h4 className="sic-title">{unit.name}</h4>
-                  <p className="sic-desc">{unit.description}</p>
-
-                  <div className="mil-stat-badge-row">
-                    <div className="msb-item">
-                      <span className="msb-k">Serangan (ATK):</span>
-                      <strong className="text-crimson">+{unit.attack}</strong>
-                    </div>
-                    <div className="msb-item">
-                      <span className="msb-k">Pertahanan (DEF):</span>
-                      <strong className="text-emerald">+{unit.defense}</strong>
-                    </div>
-                    <div className="msb-item">
-                      <span className="msb-k">Tipe:</span>
-                      <strong className="text-cyan">{unit.type}</strong>
+                <div key={unit.id} className="rr-table-row">
+                  <div className="rr-cell rr-col-resource">
+                    <div className="rr-resource-pill">
+                      <div className="rr-resource-icon-box cat-cannon">
+                        <Swords size={20} className="text-crimson" />
+                      </div>
+                      <span className="rr-resource-name">{unit.name}</span>
                     </div>
                   </div>
 
-                  {/* Quantity Stepper */}
-                  <div className="trade-stepper-box">
-                    <span className="tsb-label">Jumlah Pembelian / Penjualan:</span>
-                    <div className="tsb-controls">
-                      <button className="tsb-btn" onClick={() => handleQtyChange(unit.id, -5, true)}>-5</button>
-                      <button className="tsb-btn" onClick={() => handleQtyChange(unit.id, -1, true)}>-1</button>
-                      <span className="tsb-val">{qty} Batalyon/Unit</span>
-                      <button className="tsb-btn" onClick={() => handleQtyChange(unit.id, 1, true)}>+1</button>
-                      <button className="tsb-btn" onClick={() => handleQtyChange(unit.id, 5, true)}>+5</button>
+                  <div className="rr-cell rr-col-quantity">
+                    <strong className="rr-qty-text">
+                      {formatNumber(marketMode === 'beli' ? 500 : ownedStock)}
+                    </strong>
+                  </div>
+
+                  <div className="rr-cell rr-col-price">
+                    <div className="rr-price-box">
+                      <div className="rr-chart-icon-box">
+                        <TrendingUp size={16} />
+                      </div>
+                      <span className="rr-price-value">
+                        {formatNumber(unit.moneyCost)}
+                      </span>
+                      <div className="rr-green-coin">
+                        <div className="rr-coin-inner"></div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="sic-price-row">
-                    <span>Harga Unit:</span>
-                    <span className="sic-rp-tag">{formatRupiah(unit.moneyCost)} / unit</span>
+                  <div className="rr-cell rr-col-input">
+                    <input 
+                      type="number"
+                      className="rr-amount-input"
+                      placeholder=""
+                      value={quantities[unit.id] || ''}
+                      onChange={(e) => handleQtyChange(unit.id, e.target.value)}
+                    />
                   </div>
 
-                  {/* Dual Action Buttons: Beli & Jual */}
-                  <div className="mil-action-buttons-grid">
-                    <button
-                      className={`sic-buy-btn ${!canAfford ? 'disabled' : ''}`}
-                      onClick={() => tradeMilitaryUnit(unit.id, 'buy', qty)}
-                      disabled={!canAfford}
+                  <div className="rr-cell rr-col-action">
+                    <button 
+                      className="rr-action-green-btn"
+                      onClick={() => {
+                        const q = parseInt(quantities[unit.id], 10) || 1;
+                        tradeMilitaryUnit(unit.id, marketMode === 'beli' ? 'buy' : 'sell', q);
+                        setQuantities((prev) => ({ ...prev, [unit.id]: '' }));
+                      }}
                     >
-                      {!canAfford ? (
-                        <span>Kas Kurang</span>
-                      ) : (
-                        <>
-                          <ShoppingCart size={14} />
-                          <span>Beli ({formatRupiah(totalCost)})</span>
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      className={`sic-sell-btn ${ownedCount < qty ? 'disabled' : ''}`}
-                      onClick={() => tradeMilitaryUnit(unit.id, 'sell', qty)}
-                      disabled={ownedCount < qty}
-                      title={ownedCount < qty ? 'Unit tidak mencukupi di inventaris' : `Jual ${qty} unit seharga ${formatRupiah(sellProceeds)}`}
-                    >
-                      {ownedCount < qty ? (
-                        <span>Stok Kurang</span>
-                      ) : (
-                        <>
-                          <DollarSign size={14} />
-                          <span>Jual (+{formatRupiah(sellProceeds)})</span>
-                        </>
-                      )}
+                      {marketMode === 'beli' ? 'Beli' : 'Jual'}
                     </button>
                   </div>
                 </div>
               );
-            })}
-          </div>
+            })
+          )}
         </div>
-      )}
+      </div>
+
+      {/* Floating Mentor Widget (Seperti di Screenshot) */}
+      <div className="rr-mentor-float">
+        <div className="rr-mentor-avatar">
+          <img 
+            src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80" 
+            alt="Mentor RZ" 
+          />
+        </div>
+        <span className="rr-mentor-text">Mentor RZ</span>
+      </div>
     </div>
   );
 }
