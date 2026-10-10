@@ -47,13 +47,14 @@ export default function GrandMarketView() {
       icon: Crown,
       iconColor: '#fbbf24',
       features: [
-        'Regenerasi Energi +50% lebih cepat',
+        'Kapasitas Energi 2x Lipat (200 Energi Maksimal)',
+        'Kecepatan Upgrade Skill/Perk 1,5% Lebih Cepat',
         'Bebas Kuota Batas Voting RUU Parlemen',
         'Prioritas Antrean Kerja di Pabrik Strategis',
         'Badge Khusus Mahkota Emas pada Profil & Obrolan',
         '+1.000 EXP Karir Politik Langsung'
       ],
-      benefitText: 'Status Premium Aktif selama 30 Hari!'
+      benefitText: 'Status Premium Aktif! Energi Maksimal kini 200 & Upgrade Perk 1,5% Lebih Cepat!'
     },
     {
       id: 'prod-prem-plus-30',

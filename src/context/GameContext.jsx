@@ -112,6 +112,8 @@ export function GameProvider({ children, defaultTab }) {
             gold: u.gold !== undefined ? Number(u.gold) : 0,
             partyId: u.party_id,
             residenceRegionId: u.residence_region_id || 'dki',
+            premiumTier: u.premium_tier || 'none',
+            premiumUntil: u.premium_until || null,
             perks: {
               charisma: u.perk_charisma || 10,
               intellect: u.perk_intellect || 10,
@@ -138,6 +140,11 @@ export function GameProvider({ children, defaultTab }) {
 
             query.then(({ data, error }) => {
               if (!error && data) {
+                const nowTime = new Date().getTime();
+                const pUntil = data.premium_until ? new Date(data.premium_until).getTime() : 0;
+                const isPremActive = (data.premium_tier === 'premium' || data.premium_tier === 'premium_plus') && pUntil > nowTime;
+                const dynamicMaxEnergy = isPremActive ? 200 : 100;
+
                 const refreshed = {
                   ...u,
                   ...data,
@@ -154,7 +161,7 @@ export function GameProvider({ children, defaultTab }) {
                   exp: data.exp !== undefined ? data.exp : (u.exp || 0),
                   maxExp: data.max_exp !== undefined ? data.max_exp : (u.maxExp || 1000),
                   energy: data.energy !== undefined ? data.energy : (u.energy ?? 100),
-                  maxEnergy: data.max_energy !== undefined ? data.max_energy : (u.maxEnergy || 100),
+                  maxEnergy: dynamicMaxEnergy,
                   money: data.money !== undefined ? Number(data.money) : (u.money || 0),
                   gold: data.gold !== undefined ? Number(data.gold) : (u.gold || 0),
                   partyId: data.party_id !== undefined ? data.party_id : u.partyId,
@@ -690,13 +697,25 @@ export function GameProvider({ children, defaultTab }) {
   // Upgrade Perk dengan Timer
   // Level 1 (dari skor 10 ke 11, atau perk level 1) = 60 detik (1 menit).
   // Tiap level berikutnya bertambah 10% dari durasi level sebelumnya (misal: 60 * 1.1^(nextLevel - 1)).
+  // Bonus Efek Premium: Kecepatan upgrade 1.5% lebih cepat (durasi -1.5%).
   const getPerkUpgradeDuration = useCallback((currentLevel = 10) => {
     // currentLevel 10 (awal) -> upgrade ke 11: step 0 (durasi 60 detik / 1 menit)
     // perk naik -> kenaikan waktu 10% per tingkat: 60 * (1.10 ^ step)
     const step = Math.max(0, Number(currentLevel) - 10);
-    const durationSeconds = Math.round(60 * Math.pow(1.10, step));
-    return Math.max(60, durationSeconds);
-  }, []);
+    let durationSeconds = 60 * Math.pow(1.10, step);
+
+    // Cek apakah player memiliki status premium aktif
+    const nowTime = Date.now();
+    const pUntil = player?.premiumUntil ? new Date(player.premiumUntil).getTime() : 0;
+    const isPremium = (player?.premiumTier === 'premium' || player?.premiumTier === 'premium_plus') && pUntil > nowTime;
+
+    if (isPremium) {
+      // Kecepatan upgrade 1.5% lebih cepat -> durasi berkurang 1.5% (faktor 0.985)
+      durationSeconds = durationSeconds * 0.985;
+    }
+
+    return Math.max(30, Math.round(durationSeconds));
+  }, [player?.premiumTier, player?.premiumUntil]);
 
   const [activePerkUpgrade, setActivePerkUpgrade] = useState(() => {
     try {
@@ -890,15 +909,20 @@ export function GameProvider({ children, defaultTab }) {
   // Main game tick (every 2.5 seconds)
   useEffect(() => {
     const timer = setInterval(() => {
-      // 1. Recover energy
+      // 1. Recover energy (Efek Premium: maxEnergy 200 / 2x lipat)
       setPlayer((prev) => {
         if (!prev) return prev;
+        const nowTime = Date.now();
+        const pUntil = prev.premiumUntil ? new Date(prev.premiumUntil).getTime() : 0;
+        const isPremium = (prev.premiumTier === 'premium' || prev.premiumTier === 'premium_plus') && pUntil > nowTime;
+        const targetMaxEnergy = isPremium ? 200 : 100;
         const currentEnergy = prev.energy ?? 100;
-        const maxEnergy = prev.maxEnergy ?? 100;
-        if (currentEnergy >= maxEnergy) return prev;
+
+        if (currentEnergy >= targetMaxEnergy && prev.maxEnergy === targetMaxEnergy) return prev;
         return {
           ...prev,
-          energy: Math.min(maxEnergy, currentEnergy + 1),
+          maxEnergy: targetMaxEnergy,
+          energy: Math.min(targetMaxEnergy, currentEnergy + 1),
         };
       });
 
@@ -2614,9 +2638,9 @@ export function GameProvider({ children, defaultTab }) {
       addedExp += 1500;
     }
 
-    const newMoney = Math.max(0, (player.money || 0) - priceRp);
-    const newGold = Math.max(0, (player.gold || 0) - priceGold) + addedGold;
-    const finalUntilIso = updatedUntil.toISOString();
+    const isActivatingPremium = product.type === 'premium' || product.type === 'premium_plus' || product.type === 'subscription_monthly';
+    const newMaxEnergy = isActivatingPremium ? 200 : (player.maxEnergy || 100);
+    const newEnergy = isActivatingPremium ? 200 : (player.energy || 100);
 
     setPlayer((prev) => (prev ? {
       ...prev,
@@ -2624,7 +2648,9 @@ export function GameProvider({ children, defaultTab }) {
       gold: newGold,
       exp: (prev.exp || 0) + addedExp,
       premiumTier: updatedTier,
-      premiumUntil: finalUntilIso
+      premiumUntil: finalUntilIso,
+      maxEnergy: newMaxEnergy,
+      energy: newEnergy
     } : prev));
 
     // Simpan permanen ke Supabase jika terhubung
@@ -2636,6 +2662,8 @@ export function GameProvider({ children, defaultTab }) {
           exp: (player.exp || 0) + addedExp,
           premium_tier: updatedTier,
           premium_until: finalUntilIso,
+          energy: newEnergy,
+          max_energy: newMaxEnergy,
           updated_at: new Date().toISOString()
         }).eq('id', player.id);
       } catch (err) {
