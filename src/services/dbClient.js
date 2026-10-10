@@ -21,6 +21,8 @@ const TABLES_LIST = [
   'election_votes',
   'article_upvotes',
   'game_logs',
+  'user_inventory',
+  'market_listings',
 ];
 
 // Fetch table statistics live from Supabase

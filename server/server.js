@@ -615,6 +615,167 @@ app.post('/api/admin/user/edit-details', async (req, res) => {
   }
 });
 
+// ==================== P2P MARKETPLACE & INVENTORY APIS ====================
+
+// 1. Get Active Market Listings
+app.get('/api/market/listings', async (req, res) => {
+  try {
+    const { itemId } = req.query;
+    let sql = 'SELECT * FROM market_listings WHERE status = "active"';
+    const params = [];
+    if (itemId) {
+      sql += ' AND item_id = ?';
+      params.push(itemId);
+    }
+    sql += ' ORDER BY price_per_unit ASC, created_at DESC';
+    const rows = await query(sql, params);
+    res.json({ success: true, count: rows.length, listings: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 2. Create Market Listing (Player Sells Commodity)
+app.post('/api/market/create', async (req, res) => {
+  const { sellerId, sellerName, itemId, itemName, unit, quantity, pricePerUnit } = req.body;
+  if (!sellerId || !itemId || !quantity || !pricePerUnit) {
+    return res.status(400).json({ success: false, error: 'Data penawaran pasar tidak lengkap' });
+  }
+
+  const qty = parseInt(quantity, 10);
+  const price = parseFloat(pricePerUnit);
+  if (qty <= 0 || price <= 0) {
+    return res.status(400).json({ success: false, error: 'Jumlah dan harga per unit harus lebih besar dari 0' });
+  }
+
+  const totalPrice = qty * price;
+  const listingId = 'list-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+
+  try {
+    // Check inventory
+    const userInv = await queryOne('SELECT quantity FROM user_inventory WHERE user_id = ? AND item_id = ?', [sellerId, itemId]);
+    const currentStock = userInv ? Number(userInv.quantity) : 0;
+    if (currentStock < qty) {
+      return res.status(400).json({ success: false, error: `Stok komoditas Anda tidak cukup (${currentStock} tersedia, butuh ${qty})` });
+    }
+
+    // Deduct inventory
+    await execute('UPDATE user_inventory SET quantity = quantity - ? WHERE user_id = ? AND item_id = ?', [qty, sellerId, itemId]);
+
+    // Create listing
+    await execute(
+      'INSERT INTO market_listings (id, seller_id, seller_name, item_id, item_name, unit, quantity, price_per_unit, total_price, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, "active")',
+      [listingId, sellerId, sellerName || 'Pemain Anonim', itemId, itemName, unit, qty, price, totalPrice]
+    );
+
+    res.json({ success: true, listingId, message: 'Penawaran berhasil dipasang di bursa pasar' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 3. Buy Listing (P2P Trade)
+app.post('/api/market/buy', async (req, res) => {
+  const { listingId, buyerId } = req.body;
+  if (!listingId || !buyerId) {
+    return res.status(400).json({ success: false, error: 'Parameter listingId dan buyerId wajib disertakan' });
+  }
+
+  try {
+    const listing = await queryOne('SELECT * FROM market_listings WHERE id = ?', [listingId]);
+    if (!listing || listing.status !== 'active') {
+      return res.status(404).json({ success: false, error: 'Penawaran tidak ditemukan atau sudah dibeli / dibatalkan' });
+    }
+
+    if (listing.seller_id === buyerId) {
+      return res.status(400).json({ success: false, error: 'Anda tidak dapat membeli penawaran buatan Anda sendiri' });
+    }
+
+    const buyer = await queryOne('SELECT money FROM users WHERE id = ?', [buyerId]);
+    if (!buyer) {
+      return res.status(404).json({ success: false, error: 'Data pembeli tidak ditemukan' });
+    }
+
+    const totalPrice = Number(listing.total_price);
+    if (Number(buyer.money) < totalPrice) {
+      return res.status(400).json({ success: false, error: 'Saldo kas Rupiah Anda tidak mencukupi untuk transaksi ini' });
+    }
+
+    // 1. Deduct buyer money
+    await execute('UPDATE users SET money = money - ? WHERE id = ?', [totalPrice, buyerId]);
+
+    // 2. Credit seller money
+    await execute('UPDATE users SET money = money + ? WHERE id = ?', [totalPrice, listing.seller_id]);
+
+    // 3. Credit buyer inventory (UPSERT)
+    await execute(
+      'INSERT INTO user_inventory (user_id, item_id, quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + ?',
+      [buyerId, listing.item_id, listing.quantity, listing.quantity]
+    );
+
+    // 4. Mark listing as sold
+    await execute('UPDATE market_listings SET status = "sold", updated_at = CURRENT_TIMESTAMP WHERE id = ?', [listingId]);
+
+    res.json({
+      success: true,
+      message: `Berhasil membeli ${listing.quantity}x ${listing.item_name} dari ${listing.seller_name}!`,
+      item: {
+        itemId: listing.item_id,
+        quantity: listing.quantity,
+        totalCost: totalPrice
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 4. Cancel Listing (Seller Pulls Item Back to Inventory)
+app.post('/api/market/cancel', async (req, res) => {
+  const { listingId, sellerId } = req.body;
+  if (!listingId || !sellerId) {
+    return res.status(400).json({ success: false, error: 'Parameter listingId dan sellerId wajib disertakan' });
+  }
+
+  try {
+    const listing = await queryOne('SELECT * FROM market_listings WHERE id = ?', [listingId]);
+    if (!listing || listing.status !== 'active') {
+      return res.status(404).json({ success: false, error: 'Penawaran tidak ditemukan atau sudah selesai' });
+    }
+
+    if (listing.seller_id !== sellerId) {
+      return res.status(403).json({ success: false, error: 'Hanya penjual asli yang dapat membatalkan penawaran ini' });
+    }
+
+    // Return inventory to seller
+    await execute(
+      'INSERT INTO user_inventory (user_id, item_id, quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + ?',
+      [sellerId, listing.item_id, listing.quantity, listing.quantity]
+    );
+
+    // Mark listing as cancelled
+    await execute('UPDATE market_listings SET status = "cancelled", updated_at = CURRENT_TIMESTAMP WHERE id = ?', [listingId]);
+
+    res.json({ success: true, message: 'Penawaran berhasil dibatalkan dan barang telah dikembalikan ke inventaris Anda.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 5. Get User Inventory from DB
+app.get('/api/market/inventory/:userId', async (req, res) => {
+  try {
+    const rows = await query('SELECT item_id, quantity FROM user_inventory WHERE user_id = ?', [req.params.userId]);
+    const invMap = {};
+    rows.forEach(r => {
+      invMap[r.item_id] = Number(r.quantity);
+    });
+    res.json({ success: true, inventory: invMap });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Start Server with MySQL Database Connection
 initDatabase()
   .then(() => {

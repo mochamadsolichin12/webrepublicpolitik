@@ -219,6 +219,34 @@ CREATE TABLE IF NOT EXISTS game_logs (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
+-- 15. TABEL INVENTARIS SUMBER DAYA PEMAIN (USER_INVENTORY)
+CREATE TABLE IF NOT EXISTS user_inventory (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    item_id TEXT NOT NULL,
+    quantity INTEGER DEFAULT 0,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, item_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 16. TABEL PASAR BURSA P2P ANTAR-PEMAIN (MARKET_LISTINGS)
+CREATE TABLE IF NOT EXISTS market_listings (
+    id TEXT PRIMARY KEY,
+    seller_id TEXT NOT NULL,
+    seller_name TEXT NOT NULL,
+    item_id TEXT NOT NULL,
+    item_name TEXT NOT NULL,
+    unit TEXT NOT NULL,
+    quantity INTEGER NOT NULL,
+    price_per_unit REAL NOT NULL,
+    total_price REAL NOT NULL,
+    status TEXT DEFAULT 'active', -- 'active', 'sold', 'cancelled'
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- ==================== INDEKS UNTUK PERFORMA QUERY CEPAT ====================
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_residence ON users(residence_region_id);
@@ -226,3 +254,5 @@ CREATE INDEX IF NOT EXISTS idx_regions_island ON regions(island);
 CREATE INDEX IF NOT EXISTS idx_bills_status ON bills(status);
 CREATE INDEX IF NOT EXISTS idx_articles_created ON articles(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_world_regions_sector ON world_regions(sector);
+CREATE INDEX IF NOT EXISTS idx_market_listings_status ON market_listings(status, item_id);
+

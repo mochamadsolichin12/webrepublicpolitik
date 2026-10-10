@@ -311,6 +311,14 @@ export function GameProvider({ children, defaultTab }) {
           );
         }
       });
+
+      // Ambil data pasar P2P (market_listings) dari Supabase
+      supabase.from('market_listings').select('*').eq('status', 'active').order('price_per_unit', { ascending: true }).then(({ data, error }) => {
+        if (!error && Array.isArray(data)) {
+          setMarketListings(data);
+          localStorage.setItem(STORAGE_KEY + '_market_listings', JSON.stringify(data));
+        }
+      });
       return;
     }
   }, []);
@@ -465,6 +473,57 @@ export function GameProvider({ children, defaultTab }) {
       gold_bullion: 0,
       rice: 0
     };
+  });
+
+  // P2P Player Marketplace Listings
+  const [marketListings, setMarketListings] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY + '_market_listings');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // fallback
+    }
+    return [
+      {
+        id: 'list-sample-1',
+        seller_id: 'usr-kader-1',
+        seller_name: 'Budi Santoso (Kader Jatim)',
+        item_id: 'oil',
+        item_name: 'Minyak Mentah (Crude Oil)',
+        unit: 'Barel (bbl)',
+        quantity: 5,
+        price_per_unit: 1240000,
+        total_price: 6200000,
+        status: 'active',
+        created_at: new Date(Date.now() - 3600000).toISOString()
+      },
+      {
+        id: 'list-sample-2',
+        seller_id: 'usr-kader-2',
+        seller_name: 'Siti Rahma (Kader Riau)',
+        item_id: 'cpo',
+        item_name: 'Minyak Kelapa Sawit Mentah (CPO)',
+        unit: 'Metrik Ton',
+        quantity: 2,
+        price_per_unit: 14000000,
+        total_price: 28000000,
+        status: 'active',
+        created_at: new Date(Date.now() - 7200000).toISOString()
+      },
+      {
+        id: 'list-sample-3',
+        seller_id: 'usr-kader-3',
+        seller_name: 'Hendra Wijaya (Kader Kaltim)',
+        item_id: 'coal',
+        item_name: 'Batubara Kalori Tinggi (Thermal Coal)',
+        unit: 'Metrik Ton',
+        quantity: 10,
+        price_per_unit: 2050000,
+        total_price: 20500000,
+        status: 'active',
+        created_at: new Date(Date.now() - 10800000).toISOString()
+      }
+    ];
   });
 
   const [playerFactories, setPlayerFactories] = useState(() => {
@@ -666,6 +725,7 @@ export function GameProvider({ children, defaultTab }) {
       localStorage.setItem(STORAGE_KEY + '_commodities', JSON.stringify(commodities));
       localStorage.setItem(STORAGE_KEY + '_macro', JSON.stringify(macroEconomy));
       localStorage.setItem(STORAGE_KEY + '_inventory', JSON.stringify(playerInventory));
+      localStorage.setItem(STORAGE_KEY + '_market_listings', JSON.stringify(marketListings));
       localStorage.setItem(STORAGE_KEY + '_factories', JSON.stringify(playerFactories));
       localStorage.setItem(STORAGE_KEY + '_work_history', JSON.stringify(workHistory));
       localStorage.setItem(STORAGE_KEY + '_users', JSON.stringify(usersList));
@@ -684,7 +744,7 @@ export function GameProvider({ children, defaultTab }) {
     } catch {
       // ignore quota errors
     }
-  }, [player, regions, parties, bills, passedLaws, articles, candidates, nationalState, activeWars, warHistory, commodities, macroEconomy, playerInventory, playerFactories, workHistory, usersList, currentUser, chatMessages, topAttackers, activePerkUpgrade]);
+  }, [player, regions, parties, bills, passedLaws, articles, candidates, nationalState, activeWars, warHistory, commodities, macroEconomy, playerInventory, marketListings, playerFactories, workHistory, usersList, currentUser, chatMessages, topAttackers, activePerkUpgrade]);
 
   // Real-Time Database Auto-Sync:
   // Setiap kali player melakukan aktivitas (bekerja, menerima gaji, naik level, membeli aset),
@@ -2126,6 +2186,191 @@ export function GameProvider({ children, defaultTab }) {
     }
   };
 
+  // 13B. P2P Marketplace: Player-to-Player Trading Functions
+  const createMarketListing = async (commodityId, quantity, pricePerUnit) => {
+    sounds.playClick();
+    if (!player) {
+      showToast('Silakan masuk / login terlebih dahulu untuk menjual barang.', 'error');
+      return false;
+    }
+
+    const comm = commodities.find((c) => c.id === commodityId);
+    if (!comm) return false;
+
+    const qty = parseInt(quantity, 10);
+    const price = parseFloat(pricePerUnit);
+
+    if (isNaN(qty) || qty <= 0) {
+      showToast('Kuantitas barang harus lebih dari 0.', 'error');
+      return false;
+    }
+
+    if (isNaN(price) || price <= 0) {
+      showToast('Harga per unit harus lebih besar dari Rp 0.', 'error');
+      return false;
+    }
+
+    const currentStock = playerInventory[commodityId] || 0;
+    if (currentStock < qty) {
+      showToast(`Stok ${comm.name} di gudang Anda tidak cukup! (Milik Anda: ${currentStock} ${comm.unit})`, 'error');
+      return false;
+    }
+
+    const listingId = 'list-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+    const totalPrice = qty * price;
+    const newListing = {
+      id: listingId,
+      seller_id: player.id || player.username,
+      seller_name: player.fullName || player.username,
+      item_id: comm.id,
+      item_name: comm.name,
+      unit: comm.unit,
+      quantity: qty,
+      price_per_unit: price,
+      total_price: totalPrice,
+      status: 'active',
+      created_at: new Date().toISOString()
+    };
+
+    // Deduct player's local inventory
+    setPlayerInventory((prev) => ({
+      ...prev,
+      [commodityId]: (prev[commodityId] || 0) - qty
+    }));
+
+    // Update active market listings
+    setMarketListings((prev) => [newListing, ...prev]);
+
+    // Backend / Supabase sync
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('market_listings').insert([newListing]);
+      } catch (err) {
+        console.warn('Supabase market listing error:', err);
+      }
+    }
+
+    sounds.playSuccess();
+    showToast(`Penawaran Anda (${qty}x ${comm.name} seharga Rp ${(price / 1e6).toFixed(2)} Juta/unit) telah tayang di bursa pasar rakyat!`, 'success');
+    return true;
+  };
+
+  const buyMarketListing = async (listingId) => {
+    sounds.playClick();
+    if (!player) {
+      showToast('Silakan masuk / login terlebih dahulu untuk membeli.', 'error');
+      return false;
+    }
+
+    const listing = marketListings.find((l) => l.id === listingId);
+    if (!listing || listing.status !== 'active') {
+      showToast('Penawaran ini sudah tidak tersedia atau telah terjual.', 'error');
+      return false;
+    }
+
+    const myId = player.id || player.username;
+    if (listing.seller_id === myId) {
+      showToast('Anda tidak dapat membeli penawaran milik Anda sendiri!', 'error');
+      return false;
+    }
+
+    const totalPrice = Number(listing.total_price);
+    if ((player.money || 0) < totalPrice) {
+      showToast(`Kas Anda tidak cukup! Butuh Rp ${(totalPrice / 1e6).toFixed(2)} Juta untuk membeli penawaran ini.`, 'error');
+      return false;
+    }
+
+    // 1. Potong kas pembeli & beri EXP niaga
+    setPlayer((prev) => (prev ? {
+      ...prev,
+      money: (prev.money || 0) - totalPrice,
+      exp: (prev.exp || 0) + Math.round(listing.quantity * 15)
+    } : prev));
+
+    // 2. Tambahkan komoditas ke gudang pembeli
+    setPlayerInventory((prev) => ({
+      ...prev,
+      [listing.item_id]: (prev[listing.item_id] || 0) + Number(listing.quantity)
+    }));
+
+    // 3. Update status listing di lokal
+    setMarketListings((prev) =>
+      prev.map((l) => l.id === listingId ? { ...l, status: 'sold' } : l)
+    );
+
+    // 4. Jika penjual ada di daftar usersList / state, tambahkan kas penjual
+    setUsersList((prevUsers) =>
+      prevUsers.map((u) => {
+        if (u.id === listing.seller_id || u.username === listing.seller_id) {
+          return { ...u, money: (u.money || 0) + totalPrice };
+        }
+        return u;
+      })
+    );
+
+    // 5. Backend / Supabase sync
+    if (isSupabaseConfigured && supabase) {
+      try {
+        // Update listing status
+        await supabase.from('market_listings').update({ status: 'sold', updated_at: new Date().toISOString() }).eq('id', listingId);
+        // Potong kas pembeli di DB
+        await supabase.from('users').update({ money: (player.money || 0) - totalPrice }).eq('id', player.id);
+        // Tambahkan kas penjual di DB
+        const { data: sellerRow } = await supabase.from('users').select('money').eq('id', listing.seller_id).single();
+        if (sellerRow) {
+          await supabase.from('users').update({ money: Number(sellerRow.money || 0) + totalPrice }).eq('id', listing.seller_id);
+        }
+      } catch (err) {
+        console.warn('Supabase trade sync error:', err);
+      }
+    }
+
+    sounds.playCoin();
+    showToast(`Sukses Membeli: ${listing.quantity}x ${listing.item_name} dari ${listing.seller_name} seharga Rp ${(totalPrice / 1e6).toFixed(2)} Juta!`, 'success');
+    return true;
+  };
+
+  const cancelMarketListing = async (listingId) => {
+    sounds.playClick();
+    if (!player) return false;
+
+    const listing = marketListings.find((l) => l.id === listingId);
+    if (!listing || listing.status !== 'active') {
+      showToast('Penawaran tidak ditemukan atau sudah tidak aktif.', 'error');
+      return false;
+    }
+
+    const myId = player.id || player.username;
+    if (listing.seller_id !== myId) {
+      showToast('Hanya penjual pemilik penawaran yang dapat membatalkannya.', 'error');
+      return false;
+    }
+
+    // Kembalikan barang ke gudang
+    setPlayerInventory((prev) => ({
+      ...prev,
+      [listing.item_id]: (prev[listing.item_id] || 0) + Number(listing.quantity)
+    }));
+
+    // Ubah status listing
+    setMarketListings((prev) =>
+      prev.map((l) => l.id === listingId ? { ...l, status: 'cancelled' } : l)
+    );
+
+    // Backend / Supabase sync
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('market_listings').update({ status: 'cancelled', updated_at: new Date().toISOString() }).eq('id', listingId);
+      } catch (err) {
+        console.warn('Supabase cancel listing error:', err);
+      }
+    }
+
+    sounds.playSuccess();
+    showToast(`Penawaran dibatalkan. ${listing.quantity}x ${listing.item_name} telah dikembalikan ke gudang Anda.`, 'success');
+    return true;
+  };
+
   const buildIndustrialFacility = (facilityId) => {
     sounds.playClick();
     if (!player) {
@@ -2932,6 +3177,10 @@ export function GameProvider({ children, defaultTab }) {
         macroEconomy,
         playerInventory,
         playerFactories,
+        marketListings,
+        createMarketListing,
+        buyMarketListing,
+        cancelMarketListing,
         tradeCommodity,
         buildIndustrialFacility,
         collectFactoryYield,

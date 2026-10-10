@@ -208,6 +208,32 @@ CREATE TABLE IF NOT EXISTS game_logs (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ==================== 15. TABEL INVENTARIS SUMBER DAYA PEMAIN (USER_INVENTORY) ====================
+CREATE TABLE IF NOT EXISTS user_inventory (
+    id BIGSERIAL PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    item_id TEXT NOT NULL,                -- 'oil', 'nickel', 'cpo', 'coal', 'gold_bullion', 'rice'
+    quantity BIGINT DEFAULT 0 CHECK (quantity >= 0),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT uq_user_item UNIQUE (user_id, item_id)
+);
+
+-- ==================== 16. TABEL PASAR BURSA P2P ANTAR-PEMAIN (MARKET_LISTINGS) ====================
+CREATE TABLE IF NOT EXISTS market_listings (
+    id TEXT PRIMARY KEY,
+    seller_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    seller_name TEXT NOT NULL,
+    item_id TEXT NOT NULL,                -- 'oil', 'nickel', 'cpo', 'coal', 'gold_bullion', 'rice'
+    item_name TEXT NOT NULL,
+    unit TEXT NOT NULL,
+    quantity BIGINT NOT NULL CHECK (quantity > 0),
+    price_per_unit NUMERIC(18, 2) NOT NULL CHECK (price_per_unit > 0),
+    total_price NUMERIC(18, 2) NOT NULL,
+    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'sold', 'cancelled')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ==================== INDEKS QUERY SUPABASE ====================
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
@@ -216,6 +242,9 @@ CREATE INDEX IF NOT EXISTS idx_regions_island ON regions(island);
 CREATE INDEX IF NOT EXISTS idx_bills_status ON bills(status);
 CREATE INDEX IF NOT EXISTS idx_articles_created ON articles(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_world_regions_sector ON world_regions(sector);
+CREATE INDEX IF NOT EXISTS idx_user_inventory_user ON user_inventory(user_id);
+CREATE INDEX IF NOT EXISTS idx_market_listings_status ON market_listings(status, item_id);
+CREATE INDEX IF NOT EXISTS idx_market_listings_seller ON market_listings(seller_id);
 
 -- ==================== ROW LEVEL SECURITY (RLS) ====================
 -- Aktifkan RLS untuk standar keamanan cloud Supabase
@@ -233,6 +262,8 @@ ALTER TABLE article_upvotes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE world_regions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE diplomatic_treaties ENABLE ROW LEVEL SECURITY;
 ALTER TABLE game_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_inventory ENABLE ROW LEVEL SECURITY;
+ALTER TABLE market_listings ENABLE ROW LEVEL SECURITY;
 
 -- Policy Akses Baca Publik (Semua user dan guest dapat melihat data simulasi)
 DO $$
@@ -309,6 +340,18 @@ BEGIN
 
     DROP POLICY IF EXISTS "Public Manage Game Logs" ON game_logs;
     CREATE POLICY "Public Manage Game Logs" ON game_logs FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Read Inventory" ON user_inventory;
+    CREATE POLICY "Public Read Inventory" ON user_inventory FOR SELECT USING (true);
+
+    DROP POLICY IF EXISTS "Public Manage Inventory" ON user_inventory;
+    CREATE POLICY "Public Manage Inventory" ON user_inventory FOR ALL USING (true) WITH CHECK (true);
+
+    DROP POLICY IF EXISTS "Public Read Market Listings" ON market_listings;
+    CREATE POLICY "Public Read Market Listings" ON market_listings FOR SELECT USING (true);
+
+    DROP POLICY IF EXISTS "Public Manage Market Listings" ON market_listings;
+    CREATE POLICY "Public Manage Market Listings" ON market_listings FOR ALL USING (true) WITH CHECK (true);
 END
 $$;
 `;
