@@ -608,17 +608,6 @@ export default function ShopView({ initialSubPage }) {
           })}
         </div>
       </div>
-
-      {/* Floating Mentor Widget */}
-      <div className="rr-mentor-float">
-        <div className="rr-mentor-avatar">
-          <img 
-            src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80" 
-            alt="Mentor RZ" 
-          />
-        </div>
-        <span className="rr-mentor-text">Mentor RZ</span>
-      </div>
     </div>
   );
 }
