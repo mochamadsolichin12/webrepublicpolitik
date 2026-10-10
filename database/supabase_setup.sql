@@ -352,6 +352,24 @@ BEGIN
 END
 $$;
 
+-- Aktifkan Supabase Realtime Replication untuk Pasar & Inventaris
+DO $$
+BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE market_listings;
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END
+$$;
+
+DO $$
+BEGIN
+    ALTER PUBLICATION supabase_realtime ADD TABLE user_inventory;
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END
+$$;
+
+
 
 -- ==============================================================================
 -- 🚀 DATA AWAL (SEED DATA UNTUK SUPABASE)

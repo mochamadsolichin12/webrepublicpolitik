@@ -181,8 +181,19 @@ export function GameProvider({ children, defaultTab }) {
                   };
                   setCurrentUser(withVotes);
                   setPlayer(withVotes);
-                  localStorage.setItem(STORAGE_KEY + '_current_user', JSON.stringify(withVotes));
-                  localStorage.setItem(STORAGE_KEY + '_player', JSON.stringify(withVotes));
+                  // Ambil data inventaris player dari Supabase
+                  supabase.from('user_inventory').select('item_id, quantity').eq('user_id', refreshed.id).then(({ data: invData, error: invErr }) => {
+                    if (!invErr && Array.isArray(invData) && invData.length > 0) {
+                      setPlayerInventory((prevInv) => {
+                        const updated = { ...prevInv };
+                        invData.forEach((row) => {
+                          updated[row.item_id] = Number(row.quantity);
+                        });
+                        localStorage.setItem(STORAGE_KEY + '_inventory', JSON.stringify(updated));
+                        return updated;
+                      });
+                    }
+                  });
                 });
               }
             });
@@ -319,7 +330,54 @@ export function GameProvider({ children, defaultTab }) {
           localStorage.setItem(STORAGE_KEY + '_market_listings', JSON.stringify(data));
         }
       });
-      return;
+
+      // ==================== REAL-TIME SUPABASE LISTENER ====================
+      // Menghubungkan bursa pasar dan chat ke Supabase Realtime secara langsung
+      const marketChannel = supabase
+        .channel('market-realtime-channel')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'market_listings' },
+          (payload) => {
+            console.log('⚡ Realtime Market Event:', payload.eventType, payload);
+            if (payload.eventType === 'INSERT') {
+              const newRow = payload.new;
+              if (newRow && newRow.status === 'active') {
+                setMarketListings((prev) => {
+                  if (prev.some((item) => item.id === newRow.id)) return prev;
+                  return [newRow, ...prev];
+                });
+              }
+            } else if (payload.eventType === 'UPDATE') {
+              const updatedRow = payload.new;
+              if (updatedRow) {
+                setMarketListings((prev) => {
+                  if (updatedRow.status === 'active') {
+                    const exists = prev.some((item) => item.id === updatedRow.id);
+                    if (exists) {
+                      return prev.map((item) => item.id === updatedRow.id ? updatedRow : item);
+                    }
+                    return [updatedRow, ...prev];
+                  }
+                  // Jika status berubah jadi 'sold' atau 'cancelled', hapus dari daftar pasar aktif
+                  return prev.filter((item) => item.id !== updatedRow.id);
+                });
+              }
+            } else if (payload.eventType === 'DELETE') {
+              const oldRow = payload.old;
+              if (oldRow && oldRow.id) {
+                setMarketListings((prev) => prev.filter((item) => item.id !== oldRow.id));
+              }
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        if (marketChannel) {
+          supabase.removeChannel(marketChannel);
+        }
+      };
     }
   }, []);
 
@@ -2212,6 +2270,12 @@ export function GameProvider({ children, defaultTab }) {
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('market_listings').insert([newListing]);
+        if (player.id) {
+          const remainingStock = (playerInventory[commodityId] || 0) - qty;
+          await supabase.from('user_inventory').upsert([
+            { user_id: player.id, item_id: commodityId, quantity: Math.max(0, remainingStock), updated_at: new Date().toISOString() }
+          ], { onConflict: 'user_id,item_id' });
+        }
       } catch (err) {
         console.warn('Supabase market listing error:', err);
       }
@@ -2255,9 +2319,10 @@ export function GameProvider({ children, defaultTab }) {
     } : prev));
 
     // 2. Tambahkan komoditas ke gudang pembeli
+    const newBuyerStock = (playerInventory[listing.item_id] || 0) + Number(listing.quantity);
     setPlayerInventory((prev) => ({
       ...prev,
-      [listing.item_id]: (prev[listing.item_id] || 0) + Number(listing.quantity)
+      [listing.item_id]: newBuyerStock
     }));
 
     // 3. Update status listing di lokal
@@ -2281,7 +2346,12 @@ export function GameProvider({ children, defaultTab }) {
         // Update listing status
         await supabase.from('market_listings').update({ status: 'sold', updated_at: new Date().toISOString() }).eq('id', listingId);
         // Potong kas pembeli di DB
-        await supabase.from('users').update({ money: (player.money || 0) - totalPrice }).eq('id', player.id);
+        if (player.id) {
+          await supabase.from('users').update({ money: (player.money || 0) - totalPrice }).eq('id', player.id);
+          await supabase.from('user_inventory').upsert([
+            { user_id: player.id, item_id: listing.item_id, quantity: newBuyerStock, updated_at: new Date().toISOString() }
+          ], { onConflict: 'user_id,item_id' });
+        }
         // Tambahkan kas penjual di DB
         const { data: sellerRow } = await supabase.from('users').select('money').eq('id', listing.seller_id).single();
         if (sellerRow) {
@@ -2314,9 +2384,10 @@ export function GameProvider({ children, defaultTab }) {
     }
 
     // Kembalikan barang ke gudang
+    const restoredStock = (playerInventory[listing.item_id] || 0) + Number(listing.quantity);
     setPlayerInventory((prev) => ({
       ...prev,
-      [listing.item_id]: (prev[listing.item_id] || 0) + Number(listing.quantity)
+      [listing.item_id]: restoredStock
     }));
 
     // Ubah status listing
@@ -2328,6 +2399,11 @@ export function GameProvider({ children, defaultTab }) {
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.from('market_listings').update({ status: 'cancelled', updated_at: new Date().toISOString() }).eq('id', listingId);
+        if (player.id) {
+          await supabase.from('user_inventory').upsert([
+            { user_id: player.id, item_id: listing.item_id, quantity: restoredStock, updated_at: new Date().toISOString() }
+          ], { onConflict: 'user_id,item_id' });
+        }
       } catch (err) {
         console.warn('Supabase cancel listing error:', err);
       }
