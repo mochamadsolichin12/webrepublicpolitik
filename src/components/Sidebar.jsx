@@ -181,6 +181,14 @@ const SIDEBAR_CATEGORIES = [
         badge: 'P2P',
         badgeClass: 'badge-gold',
       },
+      {
+        id: 'grand-market',
+        label: 'Pasar Agung Kerajaan',
+        subtitle: 'Premium, Emas & Langganan',
+        icon: Crown,
+        badge: 'VIP',
+        badgeClass: 'badge-purple',
+      },
     ],
   },
   {

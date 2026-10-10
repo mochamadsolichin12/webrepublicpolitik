@@ -159,6 +159,8 @@ export function GameProvider({ children, defaultTab }) {
                   gold: data.gold !== undefined ? Number(data.gold) : (u.gold || 0),
                   partyId: data.party_id !== undefined ? data.party_id : u.partyId,
                   residenceRegionId: data.residence_region_id || u.residenceRegionId || 'dki',
+                  premiumTier: data.premium_tier || u.premiumTier || 'none',
+                  premiumUntil: data.premium_until || u.premiumUntil || null,
                   perks: {
                     charisma: data.perk_charisma || u.perks?.charisma || 10,
                     intellect: data.perk_intellect || u.perks?.intellect || 10,
@@ -794,6 +796,8 @@ export function GameProvider({ children, defaultTab }) {
           perk_intellect: player.perks?.intellect || 10,
           perk_endurance: player.perks?.endurance || 10,
           perk_connections: player.perks?.connections || 10,
+          premium_tier: player.premiumTier || 'none',
+          premium_until: player.premiumUntil || null,
           updated_at: new Date().toISOString()
         };
 
@@ -2558,6 +2562,92 @@ export function GameProvider({ children, defaultTab }) {
     return true;
   };
 
+  // 14B. Pasar Agung (Grand Market / Crown Market) Purchase Handler
+  // Khusus produk kerajaan: Akun Premium, Premium Plus, Cadangan Emas, dan Langganan Bulanan
+  const buyGrandMarketItem = async (product) => {
+    sounds.playClick();
+    if (!player) {
+      showToast('Silakan masuk / login terlebih dahulu untuk bertransaksi di Pasar Agung.', 'error');
+      return false;
+    }
+    if (!product) return false;
+
+    const priceRp = Number(product.priceRp) || 0;
+    const priceGold = Number(product.priceGold) || 0;
+
+    if (priceRp > 0 && (player.money || 0) < priceRp) {
+      showToast(`Uang tunai Anda tidak cukup! Butuh Rp ${(priceRp / 1e6).toFixed(1)} Juta untuk membeli ${product.name}.`, 'error');
+      return false;
+    }
+
+    if (priceGold > 0 && (player.gold || 0) < priceGold) {
+      showToast(`Cadangan emas Anda tidak cukup! Butuh ${priceGold} Emas untuk membeli ${product.name}.`, 'error');
+      return false;
+    }
+
+    const now = new Date();
+    let updatedTier = player.premiumTier || 'none';
+    let updatedUntil = player.premiumUntil ? new Date(player.premiumUntil) : new Date();
+    if (isNaN(updatedUntil.getTime()) || updatedUntil < now) {
+      updatedUntil = new Date();
+    }
+
+    let addedGold = 0;
+    let addedEnergy = 0;
+    let addedExp = product.bonusExp || 0;
+
+    if (product.type === 'premium') {
+      updatedTier = 'premium';
+      updatedUntil.setDate(updatedUntil.getDate() + (product.durationDays || 30));
+      addedExp += 1000;
+    } else if (product.type === 'premium_plus') {
+      updatedTier = 'premium_plus';
+      updatedUntil.setDate(updatedUntil.getDate() + (product.durationDays || 30));
+      addedExp += 2500;
+    } else if (product.type === 'gold_pack') {
+      addedGold += (product.goldAmount || 10);
+      addedExp += 500;
+    } else if (product.type === 'subscription_monthly') {
+      updatedTier = updatedTier === 'premium_plus' ? 'premium_plus' : 'premium';
+      updatedUntil.setDate(updatedUntil.getDate() + 30);
+      addedGold += (product.monthlyGoldBonus || 50);
+      addedExp += 1500;
+    }
+
+    const newMoney = Math.max(0, (player.money || 0) - priceRp);
+    const newGold = Math.max(0, (player.gold || 0) - priceGold) + addedGold;
+    const finalUntilIso = updatedUntil.toISOString();
+
+    setPlayer((prev) => (prev ? {
+      ...prev,
+      money: newMoney,
+      gold: newGold,
+      exp: (prev.exp || 0) + addedExp,
+      premiumTier: updatedTier,
+      premiumUntil: finalUntilIso
+    } : prev));
+
+    // Simpan permanen ke Supabase jika terhubung
+    if (isSupabaseConfigured && supabase && player.id) {
+      try {
+        await supabase.from('users').update({
+          money: newMoney,
+          gold: newGold,
+          exp: (player.exp || 0) + addedExp,
+          premium_tier: updatedTier,
+          premium_until: finalUntilIso,
+          updated_at: new Date().toISOString()
+        }).eq('id', player.id);
+      } catch (err) {
+        console.warn('Supabase grand market sync error:', err);
+      }
+    }
+
+    sounds.playLevelUp ? sounds.playLevelUp() : sounds.playSuccess();
+    showToast(`👑 Transaksi Berhasil! Anda kini memiliki ${product.name}! ${product.benefitText || ''}`, 'success');
+    return true;
+  };
+
   // 15. Military Unit Trading (Jual Beli Senjata & Unit Tempur)
   const tradeMilitaryUnit = (unitId, action = 'buy', quantity = 1) => {
     sounds.playClick();
@@ -3253,6 +3343,7 @@ export function GameProvider({ children, defaultTab }) {
         updatePlayerProfile,
         boostEnergy,
         buyShopItem,
+        buyGrandMarketItem,
         tradeMilitaryUnit,
         workMine,
         campaignInRegion,

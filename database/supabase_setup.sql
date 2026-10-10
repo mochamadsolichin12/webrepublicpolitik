@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS users (
     voted_president_id TEXT,
     role TEXT DEFAULT 'player',              -- 'superadmin', 'moderator', 'player'
     status TEXT DEFAULT 'active',            -- 'active', 'warned', 'banned'
+    premium_tier TEXT DEFAULT 'none',        -- 'none', 'premium', 'premium_plus'
+    premium_until TIMESTAMPTZ,               -- Masa aktif langganan bulanan
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

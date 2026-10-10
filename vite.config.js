@@ -31,6 +31,7 @@ export default defineConfig({
         jobs: resolve(__dirname, 'jobs.html'),
         settings: resolve(__dirname, 'settings.html'),
         shop: resolve(__dirname, 'shop.html'),
+        grandMarket: resolve(__dirname, 'grand-market.html'),
       },
       output: {
         manualChunks: (id) => {
