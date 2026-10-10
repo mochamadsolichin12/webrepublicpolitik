@@ -2212,15 +2212,25 @@ export function GameProvider({ children, defaultTab }) {
   };
 
   // 13B. P2P Marketplace: Player-to-Player Trading Functions
-  const createMarketListing = async (commodityId, quantity, pricePerUnit) => {
+  const createMarketListing = async (itemId, quantity, pricePerUnit, customItemMeta = null) => {
     sounds.playClick();
     if (!player) {
       showToast('Silakan masuk / login terlebih dahulu untuk menjual barang.', 'error');
       return false;
     }
 
-    const comm = commodities.find((c) => c.id === commodityId);
-    if (!comm) return false;
+    // Cari metadata item dari commodities atau customItemMeta
+    let itemMeta = commodities.find((c) => c.id === itemId);
+    if (!itemMeta && customItemMeta) {
+      itemMeta = customItemMeta;
+    }
+    if (!itemMeta) {
+      itemMeta = {
+        id: itemId,
+        name: itemId.replace(/_/g, ' ').toUpperCase(),
+        unit: 'Unit'
+      };
+    }
 
     const qty = parseInt(quantity, 10);
     const price = parseFloat(pricePerUnit);
@@ -2235,9 +2245,9 @@ export function GameProvider({ children, defaultTab }) {
       return false;
     }
 
-    const currentStock = playerInventory[commodityId] || 0;
+    const currentStock = playerInventory[itemId] || 0;
     if (currentStock < qty) {
-      showToast(`Stok ${comm.name} di gudang Anda tidak cukup! (Milik Anda: ${currentStock} ${comm.unit})`, 'error');
+      showToast(`Stok ${itemMeta.name} di gudang Anda tidak cukup! (Milik Anda: ${currentStock} ${itemMeta.unit || 'Unit'})`, 'error');
       return false;
     }
 
@@ -2247,9 +2257,9 @@ export function GameProvider({ children, defaultTab }) {
       id: listingId,
       seller_id: player.id || player.username,
       seller_name: player.fullName || player.username,
-      item_id: comm.id,
-      item_name: comm.name,
-      unit: comm.unit,
+      item_id: itemMeta.id,
+      item_name: itemMeta.name,
+      unit: itemMeta.unit || 'Unit',
       quantity: qty,
       price_per_unit: price,
       total_price: totalPrice,
@@ -2260,7 +2270,7 @@ export function GameProvider({ children, defaultTab }) {
     // Deduct player's local inventory
     setPlayerInventory((prev) => ({
       ...prev,
-      [commodityId]: (prev[commodityId] || 0) - qty
+      [itemId]: (prev[itemId] || 0) - qty
     }));
 
     // Update active market listings
@@ -2271,9 +2281,9 @@ export function GameProvider({ children, defaultTab }) {
       try {
         await supabase.from('market_listings').insert([newListing]);
         if (player.id) {
-          const remainingStock = (playerInventory[commodityId] || 0) - qty;
+          const remainingStock = (playerInventory[itemId] || 0) - qty;
           await supabase.from('user_inventory').upsert([
-            { user_id: player.id, item_id: commodityId, quantity: Math.max(0, remainingStock), updated_at: new Date().toISOString() }
+            { user_id: player.id, item_id: itemId, quantity: Math.max(0, remainingStock), updated_at: new Date().toISOString() }
           ], { onConflict: 'user_id,item_id' });
         }
       } catch (err) {
@@ -2282,7 +2292,7 @@ export function GameProvider({ children, defaultTab }) {
     }
 
     sounds.playSuccess();
-    showToast(`Penawaran Anda (${qty}x ${comm.name} seharga Rp ${(price / 1e6).toFixed(2)} Juta/unit) telah tayang di bursa pasar rakyat!`, 'success');
+    showToast(`Penawaran Anda (${qty}x ${itemMeta.name} seharga Rp ${(price / 1e6).toFixed(2)} Juta/unit) telah tayang di bursa pasar rakyat!`, 'success');
     return true;
   };
 

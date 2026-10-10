@@ -362,7 +362,7 @@ export default function ShopView({ initialSubPage }) {
   const handleSell = async (item) => {
     const inputQty = parseInt(quantities[item.id], 10);
     if (!inputQty || inputQty <= 0) {
-      alert(`Masukkan jumlah ${item.name} yang ingin dijual ke pasar.`);
+      alert(`Masukkan jumlah unit ${item.name} yang ingin dijual ke pasar.`);
       return;
     }
 
@@ -372,8 +372,17 @@ export default function ShopView({ initialSubPage }) {
       return;
     }
 
-    const sellPrice = customPrices[item.id] !== undefined ? customPrices[item.id] : item.basePrice;
-    const ok = await createMarketListing(item.id, inputQty, sellPrice);
+    const sellPrice = customPrices[item.id] !== undefined ? parseFloat(customPrices[item.id]) : item.basePrice;
+    if (isNaN(sellPrice) || sellPrice <= 0) {
+      alert(`Masukkan harga per unit yang valid untuk ${item.name}.`);
+      return;
+    }
+
+    const ok = await createMarketListing(item.id, inputQty, sellPrice, {
+      id: item.id,
+      name: item.name,
+      unit: item.unit
+    });
     if (ok) {
       setQuantities((prev) => ({ ...prev, [item.id]: '' }));
     }
@@ -541,14 +550,15 @@ export default function ShopView({ initialSubPage }) {
                     </div>
                   ) : (
                     /* Mode Jual: Pemain dapat mengatur harga satuan sendiri */
-                    <div className="rr-price-input-box">
+                    <div className="rr-price-input-box" title="Klik untuk mengubah harga per unit yang ingin Anda jual">
                       <input 
                         type="number"
                         step="0.1"
+                        min="0.1"
                         className="rr-price-input"
+                        placeholder={item.basePrice}
                         value={currentPriceInput}
                         onChange={(e) => handlePriceChange(item.id, e.target.value)}
-                        title="Atur harga per unit yang ingin Anda tawarkan ke pemain lain"
                       />
                       <div className="rr-green-coin">
                         <div className="rr-coin-inner"></div>
@@ -557,14 +567,17 @@ export default function ShopView({ initialSubPage }) {
                   )}
                 </div>
 
-                {/* Kolom 4: Input Jumlah */}
+                {/* Kolom 4: Input Jumlah (Unit yang mau dijual atau dibeli) */}
                 <div className="rr-cell rr-col-input">
                   <input 
                     type="number"
+                    min="1"
+                    max={marketMode === 'jual' ? ownedStock : undefined}
                     className="rr-amount-input"
                     placeholder="0"
                     value={quantities[item.id] || ''}
                     onChange={(e) => handleQtyChange(item.id, e.target.value)}
+                    title={marketMode === 'jual' ? `Maksimal: ${ownedStock} ${item.unit}` : 'Jumlah yang ingin dibeli'}
                   />
                 </div>
 
@@ -584,7 +597,7 @@ export default function ShopView({ initialSubPage }) {
                       className={`rr-action-green-btn btn-sell-action ${ownedStock <= 0 ? 'disabled' : ''}`}
                       onClick={() => handleSell(item)}
                       disabled={ownedStock <= 0}
-                      title={ownedStock <= 0 ? 'Stok gudang Anda kosong' : 'Pasang penawaran jual ke pasar'}
+                      title={ownedStock <= 0 ? 'Stok gudang Anda kosong' : `Jual ${quantities[item.id] || 0}x ${item.name} seharga @${currentPriceInput}`}
                     >
                       Jual
                     </button>
